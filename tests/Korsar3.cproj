@@ -354,11 +354,11 @@
           </JtagDaisyChainDevices>
         </InterfaceProperties>
         <InterfaceName>SWD</InterfaceName>
-        <JlinkConfigFile>D:\Work\Korsar3Mini-trunk\Korsar3\jlink.config</JlinkConfigFile>
+        <JlinkConfigFile>C:\Work\Korsar3Mini-trunk\Korsar3\jlink.config</JlinkConfigFile>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
-      <ToolNumber>12345678</ToolNumber>
-      <ToolName>J-Link</ToolName>
+      <ToolNumber>28012723</ToolNumber>
+      <ToolName>SAM-ICE</ToolName>
     </com_atmel_avrdbg_tool_samice>
     <avrtoolinterface>SWD</avrtoolinterface>
   </PropertyGroup>
@@ -370,147 +370,34 @@
   <armgcc.common.outputfiles.eep>False</armgcc.common.outputfiles.eep>
   <armgcc.common.outputfiles.bin>False</armgcc.common.outputfiles.bin>
   <armgcc.common.outputfiles.srec>False</armgcc.common.outputfiles.srec>
-  <armgcc.compiler.symbols.DefSymbols>
-    <ListValues>
-      <Value>scanf=iscanf</Value>
-      <Value>BOARD=ROS_KORSAR3</Value>
-      <Value>CONF_GFX_SSD1963_WF35C</Value>
-      <Value>ENG</Value>
-      <Value>ARM_MATH_CM4=true</Value>
-      <Value>printf=iprintf</Value>
-      <Value>UDD_ENABLE</Value>
-      <Value>ACCESS_USB_ENABLED</Value>
-      <Value>NDEBUG</Value>
-    </ListValues>
-  </armgcc.compiler.symbols.DefSymbols>
+  <armgcc.compiler.symbols.DefSymbols><ListValues>
+  <Value>scanf=iscanf</Value>
+  <Value>printf=iprintf</Value>
+  <Value>BOARD=ROS_KORSAR3</Value>
+  <Value>CONF_GFX_SSD1963_WF35C</Value>
+  <Value>RUS</Value>
+  <Value>SF_BALANCING</Value>
+  <Value>ARM_MATH_CM4=true</Value>
+  <Value>UDD_ENABLE</Value>
+  <Value>ACCESS_USB_ENABLED</Value>
+  <Value>NDEBUG</Value>
+</ListValues></armgcc.compiler.symbols.DefSymbols>
   <armgcc.compiler.directories.DefaultIncludePath>False</armgcc.compiler.directories.DefaultIncludePath>
-  <armgcc.compiler.directories.IncludePaths>
-    <ListValues>
-      <Value>../common/applications/user_application/user_board/config</Value>
-      <Value>../src/ASF/sam/utils</Value>
-      <Value>../src/ASF/sam/utils/preprocessor</Value>
-      <Value>../src/config</Value>
-      <Value>../src/ASF/common/boards</Value>
-      <Value>../src/ASF/thirdparty/CMSIS/Lib/GCC</Value>
-      <Value>../src/ASF/sam/utils/cmsis/sam4s/include</Value>
-      <Value>../src/ASF/sam/utils/header_files</Value>
-      <Value>../src/ASF/common/utils</Value>
-      <Value>../src</Value>
-      <Value>../src/ASF/thirdparty/CMSIS/Include</Value>
-      <Value>../src/ASF/sam/drivers/ebi/smc</Value>
-      <Value>../src/ASF/sam/drivers/pdc</Value>
-      <Value>../src/ASF/sam/drivers/pdc/pdc_uart_example</Value>
-      <Value>../src/ASF/sam/drivers/pio</Value>
-      <Value>../src/ASF/sam/drivers/pmc</Value>
-      <Value>../src/ASF/sam/drivers/rtc</Value>
-      <Value>../src/ASF/sam/drivers/spi</Value>
-      <Value>../src/ASF/sam/drivers/supc</Value>
-      <Value>../src/ASF/sam/drivers/tc</Value>
-      <Value>../src/ASF/thirdparty/fatfs/fatfs-r0.09/src</Value>
-      <Value>../src/ASF/common/services/clock</Value>
-      <Value>../src/ASF/common/services/delay</Value>
-      <Value>../src/ASF/common/services/ioport</Value>
-      <Value>../src/ASF/common/services/sleepmgr</Value>
-      <Value>../src/ASF/common/services/spi/sam_spi</Value>
-      <Value>../src/ASF/common/services/spi</Value>
-      <Value>../src/ASF/common/services/storage/ctrl_access</Value>
-      <Value>../src/ASF/common/services/usb</Value>
-      <Value>../src/ASF/common/services/usb/class/msc</Value>
-      <Value>../src/ASF/common/services/usb/class/msc/device</Value>
-      <Value>../src/ASF/common/services/usb/udc</Value>
-      <Value>../src/ASF/common/utils/membag</Value>
-      <Value>../src/ASF/sam/drivers/adc</Value>
-      <Value>../src/ASF/sam/drivers/udp</Value>
-      <Value>../src/ASF/sam/drivers/wdt</Value>
-      <Value>../src/ASF/thirdparty/fatfs/fatfs-port-r0.09/sam</Value>
-      <Value>../src/RSF/services/WtkKorsar3/Korsar3</Value>
-      <Value>../../_ext/ASFm/common/components/memory/data_flash/at45dbx</Value>
-      <Value>../../_ext/ASFm/common/services/gfx</Value>
-      <Value>../../_ext/ASFm/common/services/wtk</Value>
-      <Value>../../_ext/SEGGER_RTT/RTT</Value>
-      <Value>../../Shared/RSF/boards</Value>
-      <Value>../../Shared/RSF/components/display/Backlight_SoftPWM</Value>
-      <Value>../../Shared/RSF/components/display/ssd1963</Value>
-      <Value>../../Shared/RSF/components/kbd/KorsarKbd</Value>
-      <Value>../../Shared/RSF/services/adcreg</Value>
-      <Value>../../Shared/RSF/services/BatteryLevel</Value>
-      <Value>../../Shared/RSF/services/EepromEmul</Value>
-      <Value>../../Shared/RSF/services/Korsar3Core</Value>
-      <Value>../../Shared/RSF/services/Korsar3Mvc</Value>
-      <Value>../../Shared/RSF/services/Korsar3Mvc/Controllers</Value>
-      <Value>../../Shared/RSF/services/Korsar3Mvc/l10n</Value>
-      <Value>../../Shared/RSF/services/Korsar3Mvc/Models</Value>
-      <Value>../../Shared/RSF/services/Korsar3Mvc/ViewsIntf</Value>
-      <Value>../../Shared/RSF/services/Korsar3Rtc</Value>
-      <Value>../../Shared/RSF/services/RosCommon</Value>
-      <Value>../../Shared/RSF/services/WtkKorsar3</Value>
-      <Value>../../Center/src/SDK</Value>
-      <Value>../../Balancing/src/SDK</Value>
-      <Value>../../Shared/HelpersInCpp</Value>
-    </ListValues>
-  </armgcc.compiler.directories.IncludePaths>
-  <armgcc.compiler.optimization.level>Optimize for size (-Os)</armgcc.compiler.optimization.level>
+  <armgcc.compiler.directories.IncludePaths><ListValues><Value>../common/applications/user_application/user_board/config</Value><Value>../src</Value><Value>../src/config</Value><Value>../src/ASF/sam/utils</Value><Value>../src/ASF/sam/utils/preprocessor</Value><Value>../src/ASF/common/boards</Value><Value>../src/ASF/thirdparty/CMSIS/Lib/GCC</Value><Value>../src/ASF/sam/utils/cmsis/sam4s/include</Value><Value>../src/ASF/sam/utils/header_files</Value><Value>../src/ASF/common/utils</Value><Value>../src/ASF/thirdparty/CMSIS/Include</Value><Value>../src/ASF/sam/drivers/ebi/smc</Value><Value>../src/ASF/sam/drivers/pdc</Value><Value>../src/ASF/sam/drivers/pdc/pdc_uart_example</Value><Value>../src/ASF/sam/drivers/pio</Value><Value>../src/ASF/sam/drivers/pmc</Value><Value>../src/ASF/sam/drivers/rtc</Value><Value>../src/ASF/sam/drivers/spi</Value><Value>../src/ASF/sam/drivers/supc</Value><Value>../src/ASF/sam/drivers/tc</Value><Value>../src/ASF/thirdparty/fatfs/fatfs-r0.09/src</Value><Value>../src/ASF/common/services/clock</Value><Value>../src/ASF/common/services/delay</Value><Value>../src/ASF/common/services/ioport</Value><Value>../src/ASF/common/services/sleepmgr</Value><Value>../src/ASF/common/services/spi/sam_spi</Value><Value>../src/ASF/common/services/spi</Value><Value>../src/ASF/common/services/storage/ctrl_access</Value><Value>../src/ASF/common/services/usb</Value><Value>../src/ASF/common/services/usb/class/msc</Value><Value>../src/ASF/common/services/usb/class/msc/device</Value><Value>../src/ASF/common/services/usb/udc</Value><Value>../src/ASF/common/utils/membag</Value><Value>../src/ASF/sam/drivers/adc</Value><Value>../src/ASF/sam/drivers/udp</Value><Value>../src/ASF/sam/drivers/wdt</Value><Value>../src/ASF/thirdparty/fatfs/fatfs-port-r0.09/sam</Value><Value>../../_ext/ASFm/common/components/memory/data_flash/at45dbx</Value><Value>../../_ext/ASFm/common/services/gfx</Value><Value>../../_ext/ASFm/common/services/wtk</Value><Value>../../_ext/SEGGER_RTT/RTT</Value><Value>../../Center/src/SDK</Value><Value>../../Balancing/src/SDK</Value><Value>../../_ext</Value><Value>../../Shared</Value><Value>../../Shared/RSF/boards</Value><Value>../../Shared/RSF/components/display/ssd1963</Value></ListValues></armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.OtherFlags>-fdata-sections</armgcc.compiler.optimization.OtherFlags>
   <armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
   <armgcc.compiler.warnings.AllWarnings>True</armgcc.compiler.warnings.AllWarnings>
   <armgcc.compiler.warnings.ExtraWarnings>True</armgcc.compiler.warnings.ExtraWarnings>
   <armgcc.compiler.miscellaneous.OtherFlags>-pipe -fno-strict-aliasing -Wstrict-prototypes -Wmissing-prototypes -Werror-implicit-function-declaration -Wpointer-arith -std=gnu99 -ffunction-sections -fdata-sections -Wformat=2 -Wunused -Wfloat-equal -Wundef -Wshadow -Wbad-function-cast -Wwrite-strings -Waggregate-return -Wmissing-declarations -Wmissing-format-attribute -Wno-deprecated-declarations -Wpacked -Wredundant-decls -Wnested-externs -Wlong-long -Wunreachable-code -Wcast-align --param max-inline-insns-single=500</armgcc.compiler.miscellaneous.OtherFlags>
-  <armgcc.linker.libraries.Libraries>
-    <ListValues>
-      <Value>libm</Value>
-    </ListValues>
-  </armgcc.linker.libraries.Libraries>
-  <armgcc.linker.libraries.LibrarySearchPaths>
-    <ListValues>
-      <Value>../cmsis/linkerScripts</Value>
-      <Value>../src/ASF/thirdparty/CMSIS/Lib/GCC</Value>
-    </ListValues>
-  </armgcc.linker.libraries.LibrarySearchPaths>
+  <armgcc.linker.libraries.Libraries><ListValues><Value>libm</Value></ListValues></armgcc.linker.libraries.Libraries>
+  <armgcc.linker.libraries.LibrarySearchPaths><ListValues><Value>../cmsis/linkerScripts</Value><Value>../src/ASF/thirdparty/CMSIS/Lib/GCC</Value></ListValues></armgcc.linker.libraries.LibrarySearchPaths>
   <armgcc.linker.optimization.GarbageCollectUnusedSections>True</armgcc.linker.optimization.GarbageCollectUnusedSections>
-  <armgcc.linker.memorysettings.ExternalRAM />
+  <armgcc.linker.memorysettings.ExternalRAM></armgcc.linker.memorysettings.ExternalRAM>
   <armgcc.linker.miscellaneous.LinkerFlags>-Wl,--entry=Reset_Handler -Wl,--cref -mthumb -T../src/ASF/sam/utils/linker_scripts/sam4s/sam4s8/gcc/flash.ld</armgcc.linker.miscellaneous.LinkerFlags>
   <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM4=true -DBOARD=USER_BOARD -Dprintf=iprintf -Dscanf=iscanf -DUDD_ENABLE -DACCESS_USB_ENABLED</armgcc.preprocessingassembler.general.AssemblerFlags>
   <armgcc.preprocessingassembler.general.DefaultIncludePath>False</armgcc.preprocessingassembler.general.DefaultIncludePath>
-  <armgcc.preprocessingassembler.general.IncludePaths>
-    <ListValues>
-      <Value>../common/applications/user_application/user_board/config</Value>
-      <Value>../src/ASF/sam/utils</Value>
-      <Value>../src/ASF/sam/utils/preprocessor</Value>
-      <Value>../src/config</Value>
-      <Value>../src/ASF/common/boards</Value>
-      <Value>../src/ASF/thirdparty/CMSIS/Lib/GCC</Value>
-      <Value>../src/ASF/sam/utils/cmsis/sam4s/include</Value>
-      <Value>../src/ASF/sam/utils/header_files</Value>
-      <Value>../src/ASF/common/utils</Value>
-      <Value>../src</Value>
-      <Value>../src/ASF/thirdparty/CMSIS/Include</Value>
-      <Value>../src/ASF/sam/drivers/ebi/smc</Value>
-      <Value>../src/ASF/sam/drivers/pdc</Value>
-      <Value>../src/ASF/sam/drivers/pdc/pdc_uart_example</Value>
-      <Value>../src/ASF/sam/drivers/pio</Value>
-      <Value>../src/ASF/sam/drivers/pmc</Value>
-      <Value>../src/ASF/sam/drivers/rtc</Value>
-      <Value>../src/ASF/sam/drivers/spi</Value>
-      <Value>../src/ASF/sam/drivers/supc</Value>
-      <Value>../src/ASF/sam/drivers/tc</Value>
-      <Value>../src/ASF/thirdparty/fatfs/fatfs-r0.09/src</Value>
-      <Value>../src/ASF/common/services/clock</Value>
-      <Value>../src/ASF/common/services/delay</Value>
-      <Value>../src/ASF/common/services/ioport</Value>
-      <Value>../src/ASF/common/services/sleepmgr</Value>
-      <Value>../src/ASF/common/services/spi/sam_spi</Value>
-      <Value>../src/ASF/common/services/spi</Value>
-      <Value>../src/ASF/common/services/usb</Value>
-      <Value>../src/ASF/common/services/usb/class/msc</Value>
-      <Value>../src/ASF/common/services/usb/class/msc/device</Value>
-      <Value>../src/ASF/common/services/usb/udc</Value>
-      <Value>../src/ASF/sam/drivers/adc</Value>
-      <Value>../src/ASF/sam/drivers/udp</Value>
-      <Value>../src/ASF/sam/drivers/wdt</Value>
-      <Value>../src/ASF/thirdparty/fatfs/fatfs-port-r0.09/sam</Value>
-      <Value>../src/ASF/common/utils/membag</Value>
-    </ListValues>
-  </armgcc.preprocessingassembler.general.IncludePaths>
+  <armgcc.preprocessingassembler.general.IncludePaths><ListValues><Value>../common/applications/user_application/user_board/config</Value><Value>../src</Value><Value>../src/config</Value><Value>../src/ASF/sam/utils</Value><Value>../src/ASF/sam/utils/preprocessor</Value><Value>../src/ASF/common/boards</Value><Value>../src/ASF/thirdparty/CMSIS/Lib/GCC</Value><Value>../src/ASF/sam/utils/cmsis/sam4s/include</Value><Value>../src/ASF/sam/utils/header_files</Value><Value>../src/ASF/common/utils</Value><Value>../src/ASF/thirdparty/CMSIS/Include</Value><Value>../src/ASF/sam/drivers/ebi/smc</Value><Value>../src/ASF/sam/drivers/pdc</Value><Value>../src/ASF/sam/drivers/pdc/pdc_uart_example</Value><Value>../src/ASF/sam/drivers/pio</Value><Value>../src/ASF/sam/drivers/pmc</Value><Value>../src/ASF/sam/drivers/rtc</Value><Value>../src/ASF/sam/drivers/spi</Value><Value>../src/ASF/sam/drivers/supc</Value><Value>../src/ASF/sam/drivers/tc</Value><Value>../src/ASF/thirdparty/fatfs/fatfs-r0.09/src</Value><Value>../src/ASF/common/services/clock</Value><Value>../src/ASF/common/services/delay</Value><Value>../src/ASF/common/services/ioport</Value><Value>../src/ASF/common/services/sleepmgr</Value><Value>../src/ASF/common/services/spi/sam_spi</Value><Value>../src/ASF/common/services/spi</Value><Value>../src/ASF/common/services/usb</Value><Value>../src/ASF/common/services/usb/class/msc</Value><Value>../src/ASF/common/services/usb/class/msc/device</Value><Value>../src/ASF/common/services/usb/udc</Value><Value>../src/ASF/sam/drivers/adc</Value><Value>../src/ASF/sam/drivers/udp</Value><Value>../src/ASF/sam/drivers/wdt</Value><Value>../src/ASF/thirdparty/fatfs/fatfs-port-r0.09/sam</Value><Value>../src/ASF/common/utils/membag</Value></ListValues></armgcc.preprocessingassembler.general.IncludePaths>
+  <armgcc.compiler.optimization.level>Optimize for size (-Os)</armgcc.compiler.optimization.level>
 </ArmGcc>
     </ToolchainSettings>
     <PostBuildEvent>$(MSBuildProjectDirectory)\DoCppCheck.cmd "$(MSBuildProjectDirectory)" "$(OutputDirectory)" "$(USERNAME)" "$(Configuration)" "Korsar3Mini-trunk"</PostBuildEvent>
@@ -523,149 +410,36 @@
   <armgcc.common.outputfiles.eep>False</armgcc.common.outputfiles.eep>
   <armgcc.common.outputfiles.bin>False</armgcc.common.outputfiles.bin>
   <armgcc.common.outputfiles.srec>False</armgcc.common.outputfiles.srec>
-  <armgcc.compiler.symbols.DefSymbols>
-    <ListValues>
-      <Value>scanf=iscanf</Value>
-      <Value>BOARD=ROS_KORSAR3</Value>
-      <Value>CONF_GFX_SSD1963_WF35C</Value>
-      <Value>ENG</Value>
-      <Value>ARM_MATH_CM4=true</Value>
-      <Value>printf=iprintf</Value>
-      <Value>UDD_ENABLE</Value>
-      <Value>ACCESS_USB_ENABLED</Value>
-      <Value>DEBUG</Value>
-      <Value>_ASSERT_ENABLE_</Value>
-    </ListValues>
-  </armgcc.compiler.symbols.DefSymbols>
+  <armgcc.compiler.symbols.DefSymbols><ListValues>
+  <Value>scanf=iscanf</Value>
+  <Value>printf=iprintf</Value>
+  <Value>BOARD=ROS_KORSAR3</Value>
+  <Value>CONF_GFX_SSD1963_WF35C</Value>
+  <Value>RUS</Value>
+  <Value>SF_BALANCING</Value>
+  <Value>ARM_MATH_CM4=true</Value>
+  <Value>UDD_ENABLE</Value>
+  <Value>ACCESS_USB_ENABLED</Value>
+  <Value>DEBUG</Value>
+  <Value>_ASSERT_ENABLE_</Value>
+</ListValues></armgcc.compiler.symbols.DefSymbols>
   <armgcc.compiler.directories.DefaultIncludePath>False</armgcc.compiler.directories.DefaultIncludePath>
-  <armgcc.compiler.directories.IncludePaths>
-    <ListValues>
-      <Value>../common/applications/user_application/user_board/config</Value>
-      <Value>../src/ASF/sam/utils</Value>
-      <Value>../src/ASF/sam/utils/preprocessor</Value>
-      <Value>../src/config</Value>
-      <Value>../src/ASF/common/boards</Value>
-      <Value>../src/ASF/thirdparty/CMSIS/Lib/GCC</Value>
-      <Value>../src/ASF/sam/utils/cmsis/sam4s/include</Value>
-      <Value>../src/ASF/sam/utils/header_files</Value>
-      <Value>../src/ASF/common/utils</Value>
-      <Value>../src</Value>
-      <Value>../src/ASF/thirdparty/CMSIS/Include</Value>
-      <Value>../src/ASF/sam/drivers/ebi/smc</Value>
-      <Value>../src/ASF/sam/drivers/pdc</Value>
-      <Value>../src/ASF/sam/drivers/pdc/pdc_uart_example</Value>
-      <Value>../src/ASF/sam/drivers/pio</Value>
-      <Value>../src/ASF/sam/drivers/pmc</Value>
-      <Value>../src/ASF/sam/drivers/rtc</Value>
-      <Value>../src/ASF/sam/drivers/spi</Value>
-      <Value>../src/ASF/sam/drivers/supc</Value>
-      <Value>../src/ASF/sam/drivers/tc</Value>
-      <Value>../src/ASF/thirdparty/fatfs/fatfs-r0.09/src</Value>
-      <Value>../src/ASF/common/services/clock</Value>
-      <Value>../src/ASF/common/services/delay</Value>
-      <Value>../src/ASF/common/services/ioport</Value>
-      <Value>../src/ASF/common/services/sleepmgr</Value>
-      <Value>../src/ASF/common/services/spi/sam_spi</Value>
-      <Value>../src/ASF/common/services/spi</Value>
-      <Value>../src/ASF/common/services/storage/ctrl_access</Value>
-      <Value>../src/ASF/common/services/usb</Value>
-      <Value>../src/ASF/common/services/usb/class/msc</Value>
-      <Value>../src/ASF/common/services/usb/class/msc/device</Value>
-      <Value>../src/ASF/common/services/usb/udc</Value>
-      <Value>../src/ASF/common/utils/membag</Value>
-      <Value>../src/ASF/sam/drivers/adc</Value>
-      <Value>../src/ASF/sam/drivers/udp</Value>
-      <Value>../src/ASF/sam/drivers/wdt</Value>
-      <Value>../src/ASF/thirdparty/fatfs/fatfs-port-r0.09/sam</Value>
-      <Value>../src/RSF/services/WtkKorsar3/Korsar3</Value>
-      <Value>../../_ext/ASFm/common/components/memory/data_flash/at45dbx</Value>
-      <Value>../../_ext/ASFm/common/services/gfx</Value>
-      <Value>../../_ext/ASFm/common/services/wtk</Value>
-      <Value>../../_ext/SEGGER_RTT/RTT</Value>
-      <Value>../../Shared/RSF/boards</Value>
-      <Value>../../Shared/RSF/components/display/Backlight_SoftPWM</Value>
-      <Value>../../Shared/RSF/components/display/ssd1963</Value>
-      <Value>../../Shared/RSF/components/kbd/KorsarKbd</Value>
-      <Value>../../Shared/RSF/services/adcreg</Value>
-      <Value>../../Shared/RSF/services/BatteryLevel</Value>
-      <Value>../../Shared/RSF/services/EepromEmul</Value>
-      <Value>../../Shared/RSF/services/Korsar3Core</Value>
-      <Value>../../Shared/RSF/services/Korsar3Mvc</Value>
-      <Value>../../Shared/RSF/services/Korsar3Mvc/Controllers</Value>
-      <Value>../../Shared/RSF/services/Korsar3Mvc/l10n</Value>
-      <Value>../../Shared/RSF/services/Korsar3Mvc/Models</Value>
-      <Value>../../Shared/RSF/services/Korsar3Mvc/ViewsIntf</Value>
-      <Value>../../Shared/RSF/services/Korsar3Rtc</Value>
-      <Value>../../Shared/RSF/services/RosCommon</Value>
-      <Value>../../Shared/RSF/services/WtkKorsar3</Value>
-      <Value>../../Center/src/SDK</Value>
-      <Value>../../Balancing/src/SDK</Value>
-      <Value>../../Shared/HelpersInCpp</Value>
-    </ListValues>
-  </armgcc.compiler.directories.IncludePaths>
+  <armgcc.compiler.directories.IncludePaths><ListValues><Value>../common/applications/user_application/user_board/config</Value><Value>../src</Value><Value>../src/config</Value><Value>../src/ASF/sam/utils</Value><Value>../src/ASF/sam/utils/preprocessor</Value><Value>../src/ASF/common/boards</Value><Value>../src/ASF/thirdparty/CMSIS/Lib/GCC</Value><Value>../src/ASF/sam/utils/cmsis/sam4s/include</Value><Value>../src/ASF/sam/utils/header_files</Value><Value>../src/ASF/common/utils</Value><Value>../src/ASF/thirdparty/CMSIS/Include</Value><Value>../src/ASF/sam/drivers/ebi/smc</Value><Value>../src/ASF/sam/drivers/pdc</Value><Value>../src/ASF/sam/drivers/pdc/pdc_uart_example</Value><Value>../src/ASF/sam/drivers/pio</Value><Value>../src/ASF/sam/drivers/pmc</Value><Value>../src/ASF/sam/drivers/rtc</Value><Value>../src/ASF/sam/drivers/spi</Value><Value>../src/ASF/sam/drivers/supc</Value><Value>../src/ASF/sam/drivers/tc</Value><Value>../src/ASF/thirdparty/fatfs/fatfs-r0.09/src</Value><Value>../src/ASF/common/services/clock</Value><Value>../src/ASF/common/services/delay</Value><Value>../src/ASF/common/services/ioport</Value><Value>../src/ASF/common/services/sleepmgr</Value><Value>../src/ASF/common/services/spi/sam_spi</Value><Value>../src/ASF/common/services/spi</Value><Value>../src/ASF/common/services/storage/ctrl_access</Value><Value>../src/ASF/common/services/usb</Value><Value>../src/ASF/common/services/usb/class/msc</Value><Value>../src/ASF/common/services/usb/class/msc/device</Value><Value>../src/ASF/common/services/usb/udc</Value><Value>../src/ASF/common/utils/membag</Value><Value>../src/ASF/sam/drivers/adc</Value><Value>../src/ASF/sam/drivers/udp</Value><Value>../src/ASF/sam/drivers/wdt</Value><Value>../src/ASF/thirdparty/fatfs/fatfs-port-r0.09/sam</Value><Value>../../_ext/ASFm/common/components/memory/data_flash/at45dbx</Value><Value>../../_ext/ASFm/common/services/gfx</Value><Value>../../_ext/ASFm/common/services/wtk</Value><Value>../../_ext/SEGGER_RTT/RTT</Value><Value>../../Center/src/SDK</Value><Value>../../Balancing/src/SDK</Value><Value>../../_ext</Value><Value>../../Shared</Value><Value>../../Shared/RSF/boards</Value><Value>../../Shared/RSF/components/display/ssd1963</Value></ListValues></armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.OtherFlags>-fdata-sections</armgcc.compiler.optimization.OtherFlags>
   <armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
-  <armgcc.compiler.optimization.DebugLevel>Maximum (-g3)</armgcc.compiler.optimization.DebugLevel>
   <armgcc.compiler.warnings.AllWarnings>True</armgcc.compiler.warnings.AllWarnings>
   <armgcc.compiler.warnings.ExtraWarnings>True</armgcc.compiler.warnings.ExtraWarnings>
   <armgcc.compiler.miscellaneous.OtherFlags>-pipe -fno-strict-aliasing -Wstrict-prototypes -Wmissing-prototypes -Werror-implicit-function-declaration -Wpointer-arith -std=gnu99 -ffunction-sections -fdata-sections -Wformat=2 -Wunused -Wfloat-equal -Wundef -Wshadow -Wbad-function-cast -Wwrite-strings -Waggregate-return -Wmissing-declarations -Wmissing-format-attribute -Wno-deprecated-declarations -Wpacked -Wredundant-decls -Wnested-externs -Wlong-long -Wunreachable-code -Wcast-align --param max-inline-insns-single=500</armgcc.compiler.miscellaneous.OtherFlags>
-  <armgcc.linker.libraries.Libraries>
-    <ListValues>
-      <Value>libm</Value>
-    </ListValues>
-  </armgcc.linker.libraries.Libraries>
-  <armgcc.linker.libraries.LibrarySearchPaths>
-    <ListValues>
-      <Value>../cmsis/linkerScripts</Value>
-      <Value>../src/ASF/thirdparty/CMSIS/Lib/GCC</Value>
-    </ListValues>
-  </armgcc.linker.libraries.LibrarySearchPaths>
+  <armgcc.linker.libraries.Libraries><ListValues><Value>libm</Value></ListValues></armgcc.linker.libraries.Libraries>
+  <armgcc.linker.libraries.LibrarySearchPaths><ListValues><Value>../cmsis/linkerScripts</Value><Value>../src/ASF/thirdparty/CMSIS/Lib/GCC</Value></ListValues></armgcc.linker.libraries.LibrarySearchPaths>
   <armgcc.linker.optimization.GarbageCollectUnusedSections>True</armgcc.linker.optimization.GarbageCollectUnusedSections>
-  <armgcc.linker.memorysettings.ExternalRAM />
+  <armgcc.linker.memorysettings.ExternalRAM></armgcc.linker.memorysettings.ExternalRAM>
   <armgcc.linker.miscellaneous.LinkerFlags>-Wl,--entry=Reset_Handler -Wl,--cref -mthumb -T../src/ASF/sam/utils/linker_scripts/sam4s/sam4s8/gcc/flash.ld</armgcc.linker.miscellaneous.LinkerFlags>
-  <armgcc.assembler.debugging.DebugLevel>Default (-g)</armgcc.assembler.debugging.DebugLevel>
   <armgcc.preprocessingassembler.general.AssemblerFlags>-DARM_MATH_CM4=true -DBOARD=USER_BOARD -Dprintf=iprintf -Dscanf=iscanf -DUDD_ENABLE -DACCESS_USB_ENABLED</armgcc.preprocessingassembler.general.AssemblerFlags>
   <armgcc.preprocessingassembler.general.DefaultIncludePath>False</armgcc.preprocessingassembler.general.DefaultIncludePath>
-  <armgcc.preprocessingassembler.general.IncludePaths>
-    <ListValues>
-      <Value>../common/applications/user_application/user_board/config</Value>
-      <Value>../src/ASF/sam/utils</Value>
-      <Value>../src/ASF/sam/utils/preprocessor</Value>
-      <Value>../src/config</Value>
-      <Value>../src/ASF/common/boards</Value>
-      <Value>../src/ASF/thirdparty/CMSIS/Lib/GCC</Value>
-      <Value>../src/ASF/sam/utils/cmsis/sam4s/include</Value>
-      <Value>../src/ASF/sam/utils/header_files</Value>
-      <Value>../src/ASF/common/utils</Value>
-      <Value>../src</Value>
-      <Value>../src/ASF/thirdparty/CMSIS/Include</Value>
-      <Value>../src/ASF/sam/drivers/ebi/smc</Value>
-      <Value>../src/ASF/sam/drivers/pdc</Value>
-      <Value>../src/ASF/sam/drivers/pdc/pdc_uart_example</Value>
-      <Value>../src/ASF/sam/drivers/pio</Value>
-      <Value>../src/ASF/sam/drivers/pmc</Value>
-      <Value>../src/ASF/sam/drivers/rtc</Value>
-      <Value>../src/ASF/sam/drivers/spi</Value>
-      <Value>../src/ASF/sam/drivers/supc</Value>
-      <Value>../src/ASF/sam/drivers/tc</Value>
-      <Value>../src/ASF/thirdparty/fatfs/fatfs-r0.09/src</Value>
-      <Value>../src/ASF/common/services/clock</Value>
-      <Value>../src/ASF/common/services/delay</Value>
-      <Value>../src/ASF/common/services/ioport</Value>
-      <Value>../src/ASF/common/services/sleepmgr</Value>
-      <Value>../src/ASF/common/services/spi/sam_spi</Value>
-      <Value>../src/ASF/common/services/spi</Value>
-      <Value>../src/ASF/common/services/usb</Value>
-      <Value>../src/ASF/common/services/usb/class/msc</Value>
-      <Value>../src/ASF/common/services/usb/class/msc/device</Value>
-      <Value>../src/ASF/common/services/usb/udc</Value>
-      <Value>../src/ASF/sam/drivers/adc</Value>
-      <Value>../src/ASF/sam/drivers/udp</Value>
-      <Value>../src/ASF/sam/drivers/wdt</Value>
-      <Value>../src/ASF/thirdparty/fatfs/fatfs-port-r0.09/sam</Value>
-      <Value>../src/ASF/common/utils/membag</Value>
-    </ListValues>
-  </armgcc.preprocessingassembler.general.IncludePaths>
+  <armgcc.preprocessingassembler.general.IncludePaths><ListValues><Value>../common/applications/user_application/user_board/config</Value><Value>../src</Value><Value>../src/config</Value><Value>../src/ASF/sam/utils</Value><Value>../src/ASF/sam/utils/preprocessor</Value><Value>../src/ASF/common/boards</Value><Value>../src/ASF/thirdparty/CMSIS/Lib/GCC</Value><Value>../src/ASF/sam/utils/cmsis/sam4s/include</Value><Value>../src/ASF/sam/utils/header_files</Value><Value>../src/ASF/common/utils</Value><Value>../src/ASF/thirdparty/CMSIS/Include</Value><Value>../src/ASF/sam/drivers/ebi/smc</Value><Value>../src/ASF/sam/drivers/pdc</Value><Value>../src/ASF/sam/drivers/pdc/pdc_uart_example</Value><Value>../src/ASF/sam/drivers/pio</Value><Value>../src/ASF/sam/drivers/pmc</Value><Value>../src/ASF/sam/drivers/rtc</Value><Value>../src/ASF/sam/drivers/spi</Value><Value>../src/ASF/sam/drivers/supc</Value><Value>../src/ASF/sam/drivers/tc</Value><Value>../src/ASF/thirdparty/fatfs/fatfs-r0.09/src</Value><Value>../src/ASF/common/services/clock</Value><Value>../src/ASF/common/services/delay</Value><Value>../src/ASF/common/services/ioport</Value><Value>../src/ASF/common/services/sleepmgr</Value><Value>../src/ASF/common/services/spi/sam_spi</Value><Value>../src/ASF/common/services/spi</Value><Value>../src/ASF/common/services/usb</Value><Value>../src/ASF/common/services/usb/class/msc</Value><Value>../src/ASF/common/services/usb/class/msc/device</Value><Value>../src/ASF/common/services/usb/udc</Value><Value>../src/ASF/sam/drivers/adc</Value><Value>../src/ASF/sam/drivers/udp</Value><Value>../src/ASF/sam/drivers/wdt</Value><Value>../src/ASF/thirdparty/fatfs/fatfs-port-r0.09/sam</Value><Value>../src/ASF/common/utils/membag</Value></ListValues></armgcc.preprocessingassembler.general.IncludePaths>
+  <armgcc.compiler.optimization.DebugLevel>Maximum (-g3)</armgcc.compiler.optimization.DebugLevel>
+  <armgcc.assembler.debugging.DebugLevel>Default (-g)</armgcc.assembler.debugging.DebugLevel>
   <armgcc.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcc.preprocessingassembler.debugging.DebugLevel>
 </ArmGcc>
     </ToolchainSettings>
@@ -757,6 +531,7 @@
     <Folder Include="src\config\" />
     <Folder Include="src\ASFm" />
     <Folder Include="src\RSF\components\display\Backlight_SoftPWM" />
+    <Folder Include="src\RSF\services\Korsar3Mvc\Services" />
     <Folder Include="src\_ext" />
     <Folder Include="src\RSF" />
     <Folder Include="src\RSF\boards" />
@@ -890,6 +665,10 @@
       <SubType>compile</SubType>
       <Link>src\RSF\services\Korsar3Mvc\Controllers\GenericSetupsController.h</Link>
     </Compile>
+    <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Controllers\IfController.h">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\Korsar3Mvc\Controllers\IfController.h</Link>
+    </Compile>
     <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Controllers\MeasurementsSetupsController.c">
       <SubType>compile</SubType>
       <Link>src\RSF\services\Korsar3Mvc\Controllers\MeasurementsSetupsController.c</Link>
@@ -914,6 +693,14 @@
       <SubType>compile</SubType>
       <Link>src\RSF\services\Korsar3Mvc\Controllers\SensorsSetupsController.c</Link>
     </Compile>
+    <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Controllers\SignalBalancingModeController.c">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\Korsar3Mvc\Controllers\SignalBalancingModeController.c</Link>
+    </Compile>
+    <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Controllers\SignalBalancingModeController.h">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\Korsar3Mvc\Controllers\SignalBalancingModeController.h</Link>
+    </Compile>
     <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Controllers\SignalConfChannelsController.c">
       <SubType>compile</SubType>
       <Link>src\RSF\services\Korsar3Mvc\Controllers\SignalConfChannelsController.c</Link>
@@ -929,6 +716,18 @@
     <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Controllers\SignalController.h">
       <SubType>compile</SubType>
       <Link>src\RSF\services\Korsar3Mvc\Controllers\SignalController.h</Link>
+    </Compile>
+    <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Controllers\SignalControllerShared.h">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\Korsar3Mvc\Controllers\SignalControllerShared.h</Link>
+    </Compile>
+    <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Controllers\SignalDoConfChannelsDetector.c">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\Korsar3Mvc\Controllers\SignalDoConfChannelsDetector.c</Link>
+    </Compile>
+    <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Controllers\SignalStdRegModeDetector.c">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\Korsar3Mvc\Controllers\SignalStdRegModeDetector.c</Link>
     </Compile>
     <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Korsar3MvcTypes.c">
       <SubType>compile</SubType>
@@ -957,14 +756,6 @@
     <Compile Include="..\Shared\RSF\services\Korsar3Mvc\l10n\Shared.c">
       <SubType>compile</SubType>
       <Link>src\RSF\services\Korsar3Mvc\l10n\Shared.c</Link>
-    </Compile>
-    <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Models\AdcService.c">
-      <SubType>compile</SubType>
-      <Link>src\RSF\services\Korsar3Mvc\Models\AdcService.c</Link>
-    </Compile>
-    <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Models\AdcService.h">
-      <SubType>compile</SubType>
-      <Link>src\RSF\services\Korsar3Mvc\Models\AdcService.h</Link>
     </Compile>
     <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Models\ArchiveAccessModel.h">
       <SubType>compile</SubType>
@@ -1010,6 +801,22 @@
       <SubType>compile</SubType>
       <Link>src\RSF\services\Korsar3Mvc\RmsTypes.h</Link>
     </Compile>
+    <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Services\AdcRegHelper.c">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\Korsar3Mvc\Services\AdcRegHelper.c</Link>
+    </Compile>
+    <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Services\AdcRegHelper.h">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\Korsar3Mvc\Services\AdcRegHelper.h</Link>
+    </Compile>
+    <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Services\DataTransformer.c">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\Korsar3Mvc\Services\DataTransformer.c</Link>
+    </Compile>
+    <Compile Include="..\Shared\RSF\services\Korsar3Mvc\Services\DataTransformer.h">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\Korsar3Mvc\Services\DataTransformer.h</Link>
+    </Compile>
     <Compile Include="..\Shared\RSF\services\Korsar3Mvc\ViewsIntf\BatteryLevelViewIntf.h">
       <SubType>compile</SubType>
       <Link>src\RSF\services\Korsar3Mvc\ViewsIntf\BatteryLevelViewIntf.h</Link>
@@ -1033,6 +840,10 @@
     <Compile Include="..\Shared\RSF\services\Korsar3Mvc\ViewsIntf\SaveConfirmViewIntf.h">
       <SubType>compile</SubType>
       <Link>src\RSF\services\Korsar3Mvc\ViewsIntf\SaveConfirmViewIntf.h</Link>
+    </Compile>
+    <Compile Include="..\Shared\RSF\services\Korsar3Mvc\ViewsIntf\SignalBalancingModeViewIntf.h">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\Korsar3Mvc\ViewsIntf\SignalBalancingModeViewIntf.h</Link>
     </Compile>
     <Compile Include="..\Shared\RSF\services\Korsar3Mvc\ViewsIntf\SignalViewIntf.h">
       <SubType>compile</SubType>
@@ -1073,14 +884,6 @@
     <Compile Include="..\Shared\RSF\services\RosCommon\PubSub\SystemHeralds.h">
       <SubType>compile</SubType>
       <Link>src\RSF\services\RosCommon\PubSub\SystemHeralds.h</Link>
-    </Compile>
-    <Compile Include="..\Shared\RSF\services\RosCommon\RosMath.c">
-      <SubType>compile</SubType>
-      <Link>src\RSF\services\RosCommon\RosMath.c</Link>
-    </Compile>
-    <Compile Include="..\Shared\RSF\services\RosCommon\RosMath.h">
-      <SubType>compile</SubType>
-      <Link>src\RSF\services\RosCommon\RosMath.h</Link>
     </Compile>
     <Compile Include="..\Shared\RSF\services\RosCommon\RosStd.c">
       <SubType>compile</SubType>
@@ -1126,6 +929,14 @@
       <SubType>compile</SubType>
       <Link>src\RSF\services\WtkKorsar3\GenericSetupsMenuWidget.c</Link>
     </Compile>
+    <Compile Include="..\Shared\RSF\services\WtkKorsar3\IfMenusConf.h">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\WtkKorsar3\IfMenusConf.h</Link>
+    </Compile>
+    <Compile Include="..\Shared\RSF\services\WtkKorsar3\IfWidget.c">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\WtkKorsar3\IfWidget.c</Link>
+    </Compile>
     <Compile Include="..\Shared\RSF\services\WtkKorsar3\l10n\eng.c">
       <SubType>compile</SubType>
       <Link>src\RSF\services\WtkKorsar3\l10n\eng.c</Link>
@@ -1133,18 +944,6 @@
     <Compile Include="..\Shared\RSF\services\WtkKorsar3\l10n\rus.c">
       <SubType>compile</SubType>
       <Link>src\RSF\services\WtkKorsar3\l10n\rus.c</Link>
-    </Compile>
-    <Compile Include="..\Shared\RSF\services\WtkKorsar3\l10n\StrConst.h">
-      <SubType>compile</SubType>
-      <Link>src\RSF\services\WtkKorsar3\l10n\StrConst.h</Link>
-    </Compile>
-    <Compile Include="..\Shared\RSF\services\WtkKorsar3\l10n\StrConst_ENG.c">
-      <SubType>compile</SubType>
-      <Link>src\RSF\services\WtkKorsar3\l10n\StrConst_ENG.c</Link>
-    </Compile>
-    <Compile Include="..\Shared\RSF\services\WtkKorsar3\l10n\StrConst_RUS.c">
-      <SubType>compile</SubType>
-      <Link>src\RSF\services\WtkKorsar3\l10n\StrConst_RUS.c</Link>
     </Compile>
     <Compile Include="..\Shared\RSF\services\WtkKorsar3\l10n\WtkKorsar3_l10n.h">
       <SubType>compile</SubType>
@@ -1154,9 +953,17 @@
       <SubType>compile</SubType>
       <Link>src\RSF\services\WtkKorsar3\MessageDialogWidget.c</Link>
     </Compile>
+    <Compile Include="..\Shared\RSF\services\WtkKorsar3\SaveConfirmDialogWidget.c">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\WtkKorsar3\SaveConfirmDialogWidget.c</Link>
+    </Compile>
     <Compile Include="..\Shared\RSF\services\WtkKorsar3\ScreenSaverWidget.c">
       <SubType>compile</SubType>
       <Link>src\RSF\services\WtkKorsar3\ScreenSaverWidget.c</Link>
+    </Compile>
+    <Compile Include="..\Shared\RSF\services\WtkKorsar3\SignalBalancingModeWidget.c">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\WtkKorsar3\SignalBalancingModeWidget.c</Link>
     </Compile>
     <Compile Include="..\Shared\RSF\services\WtkKorsar3\SignalWidget.c">
       <SubType>compile</SubType>
@@ -1165,6 +972,14 @@
     <Compile Include="..\Shared\RSF\services\WtkKorsar3\SignalWidget.h">
       <SubType>compile</SubType>
       <Link>src\RSF\services\WtkKorsar3\SignalWidget.h</Link>
+    </Compile>
+    <Compile Include="..\Shared\RSF\services\WtkKorsar3\WidgetHelper.c">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\WtkKorsar3\WidgetHelper.c</Link>
+    </Compile>
+    <Compile Include="..\Shared\RSF\services\WtkKorsar3\WidgetHelper.h">
+      <SubType>compile</SubType>
+      <Link>src\RSF\services\WtkKorsar3\WidgetHelper.h</Link>
     </Compile>
     <Compile Include="..\Shared\RSF\services\WtkKorsar3\WtkKorsar3.c">
       <SubType>compile</SubType>
@@ -1313,6 +1128,18 @@
     <Compile Include="src\RSF\services\WtkKorsar3\Korsar3\GenericSetupsMenusConf.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\RSF\services\WtkKorsar3\Korsar3\IfMenusConf.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\RSF\services\WtkKorsar3\Korsar3\l10n\StrConst.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\RSF\services\WtkKorsar3\Korsar3\l10n\StrConst_ENG.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\RSF\services\WtkKorsar3\Korsar3\l10n\StrConst_RUS.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\RSF\services\WtkKorsar3\Korsar3\MenuCommon.c">
       <SubType>compile</SubType>
     </Compile>
@@ -1320,9 +1147,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\RSF\services\WtkKorsar3\Korsar3\RmsWidget.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\RSF\services\WtkKorsar3\Korsar3\SaveConfirmDialogWidget.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\RSF\services\WtkKorsar3\Korsar3\SignalWidget_K3.c">
@@ -1344,9 +1168,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\config\conf_wtk.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\rsf.h">
       <SubType>compile</SubType>
     </Compile>
     <None Include="src\asf.h">
@@ -2231,6 +2052,11 @@
     <ProjectReference Include="..\HelpersInCppK3\HelpersInCppK3.cppproj">
       <Name>HelpersInCppK3</Name>
       <Project>{3ff0008f-4448-4a62-b3a4-479883fb2188}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\_ext\RosMath\project\RosMath_Static_AS62\RosMath_Static.cppproj">
+      <Name>RosMath_Static</Name>
+      <Project>{a0b93fe0-324c-4670-bd2a-9a16c3c5fa75}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
