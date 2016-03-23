@@ -202,7 +202,15 @@ if src_files_group is not None:
                 print('Skipping file {}'.format(file))
     nw.newline()
 
-nw.build(output + '.elf', 'link', obj_files)
+linker_script = ''
+for lflag in lflags:
+    pos = lflag.find(' -T')
+    if pos != -1:
+        linker_script = lflag[pos + 3:]
+print('linker_script =' + linker_script)
+
+nw.build(output + '.elf', 'link', obj_files,
+         implicit=[linker_script])
 nw.newline()
 
 nw.build('all', 'phony', output + '.elf')
