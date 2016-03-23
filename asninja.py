@@ -4,7 +4,7 @@ import re
 import ninja_syntax
 
 
-class AtmelStudioProject(object):
+class AtmelStudioProject:
     def __init__(self, file_name):
         self.NSMAP = {'msb': 'http://schemas.microsoft.com/developer/msbuild/2003'}
         self.prj = ElementTree.parse(file_name)
@@ -54,6 +54,15 @@ class AtmelStudioProject(object):
         return src_files
 
 
+class RefLibrary:
+    def __init__(self, path, name):
+        self.path = path
+        self.name = name
+
+    def full_name(self):
+        return self.path + '/lib' + self.name + '.a'
+
+
 def strip_updir(file_name):
     fn = file_name
     while fn.find('..') == 0:
@@ -79,6 +88,13 @@ def convert(toolchain, prj, config, output):
 
     ccflags = ['-mthumb', '-mcpu=cortex-m4', '-D__SAM4S8C__']
     lflags = ['-mthumb', '-mcpu=cortex-m4']
+
+    ref_libs = [
+        RefLibrary('C:/Work/Korsar3Mini-trunk/Balancing/Debug', 'Balancing'),
+        RefLibrary('C:/Work/Korsar3Mini-trunk/Center/Debug', 'Center'),
+        RefLibrary('C:/Work/Korsar3Mini-trunk/HelpersInCppK3/Debug', 'HelpersInCppK3'),
+        RefLibrary('C:/Work/Korsar3Mini-trunk/_ext/RosMath/project/RosMath_Static_AS62/Debug', 'RosMath_Static')
+    ]
 
     if asp.set_config(config):
         # ARM/GNU C Compiler
@@ -173,12 +189,13 @@ def convert(toolchain, prj, config, output):
             lflags.append('--specs=nano.specs')
         # AdditionalSpecs: if you want it - read it from './/armgcc.linker.general.AdditionalSpecs'
         # Libraries
+        prj_libs = asp.get_key_as_str_array('armgcc.linker.libraries.Libraries', '-l{}')
+        print(prj_libs)
+        print(' -l'.join(x.name for x in ref_libs))
         lflags.append('-Wl,--start-group -lm -lBalancing -lCenter -lHelpersInCppK3 -lRosMath_Static -Wl,--end-group')
         lflags += asp.get_key_as_str_array('armgcc.linker.libraries.LibrarySearchPaths', '-L"{}"')
-        lflags.append('-L"C:/Work/Korsar3Mini-trunk/Balancing/Debug"')
-        lflags.append('-L"C:/Work/Korsar3Mini-trunk/Center/Debug"')
-        lflags.append('-L"C:/Work/Korsar3Mini-trunk/HelpersInCppK3/Debug"')
-        lflags.append('-L"C:/Work/Korsar3Mini-trunk/_ext/RosMath/project/RosMath_Static_AS62/Debug"')
+        for lib in ref_libs:
+            lflags.append('-L"{}"'.format(lib.path))
         # Optimization
         if asp.get_key_as_bool('armgcc.linker.optimization.GarbageCollectUnusedSections'):
             lflags.append('-Wl,--gc-sections')
@@ -241,10 +258,8 @@ def convert(toolchain, prj, config, output):
         print('linker_script =' + linker_script)
         implicit_dep.append(linker_script)
     #
-    implicit_dep.append('C:/Work/Korsar3Mini-trunk/Balancing/Debug/libBalancing.a')
-    implicit_dep.append('C:/Work/Korsar3Mini-trunk/Center/Debug/libCenter.a')
-    implicit_dep.append('C:/Work/Korsar3Mini-trunk/HelpersInCppK3/Debug/libHelpersInCppK3.a')
-    implicit_dep.append('C:/Work/Korsar3Mini-trunk/_ext/RosMath/project/RosMath_Static_AS62/Debug/libRosMath_Static.a')
+    for lib in ref_libs:
+        implicit_dep.append(lib.full_name())
 
     if obj_files:
         nw.newline()
