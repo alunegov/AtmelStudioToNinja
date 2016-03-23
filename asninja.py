@@ -30,9 +30,9 @@ def get_key_as_bool(config, name, default=False):
 
 
 def get_key_as_strarray(config, name, fmt):
-    s = ''
+    s = []
     for key in config.findall('.//' + name + '/ListValues/Value'):
-        s += fmt.format(key.text)
+        s.append(fmt.format(key.text))
     return s
 
 
@@ -52,119 +52,119 @@ nw.variable('builddir', 'build')
 nw.newline()
 
 output = 'Korsar3'
-ccflags = '-mthumb -mcpu=cortex-m4 -D__SAM4S8C__'
-lflags = '-mthumb -mcpu=cortex-m4'
+ccflags = ['-mthumb', '-mcpu=cortex-m4', '-D__SAM4S8C__']
+lflags = ['-mthumb', '-mcpu=cortex-m4']
 
 config_group = get_config_group(asProject, 'Debug')
 if config_group is not None:
     # ARM/GNU C Compiler
     # General
     if get_key_as_bool(config_group, 'armgcc.compiler.general.ChangeDefaultCharTypeUnsigned'):
-        ccflags += ' -funsigned-char'
+        ccflags.append('-funsigned-char')
     if get_key_as_bool(config_group, 'armgcc.compiler.general.ChangeDefaultBitFieldUnsigned'):
-        ccflags += ' -funsigned-bitfields'
+        ccflags.append('-funsigned-bitfields')
     # Preprocessor
     if get_key_as_bool(config_group, 'armgcc.compiler.general.DoNotSearchSystemDirectories'):
-        ccflags += ' -nostdinc'
+        ccflags.append('-nostdinc')
     if get_key_as_bool(config_group, 'armgcc.compiler.general.PreprocessOnly'):
-        ccflags += ' -E'
+        ccflags.append('-E')
     # Symbols
-    ccflags += get_key_as_strarray(config_group, 'armgcc.compiler.symbols.DefSymbols', ' -D{}')
+    ccflags += get_key_as_strarray(config_group, 'armgcc.compiler.symbols.DefSymbols', '-D{}')
     # Directories
-    ccflags += get_key_as_strarray(config_group, 'armgcc.compiler.directories.IncludePaths', ' -I"{}"')
+    ccflags += get_key_as_strarray(config_group, 'armgcc.compiler.directories.IncludePaths', '-I"{}"')
     # Optimization
     # Optimization Level: -O[0,1,2,3,s]
     item = config_group.find('.//armgcc.compiler.optimization.level')
     if item is not None:
         if item.text.find('-O0') != -1:
-            ccflags += ' -O0'
-    ccflags += get_key_as_str(config_group, 'armgcc.compiler.optimization.OtherFlags', ' {}')
+            ccflags.append('-O0')
+    ccflags += [get_key_as_str(config_group, 'armgcc.compiler.optimization.OtherFlags', '{}')]
     if get_key_as_bool(config_group, 'armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection'):
-        ccflags += ' -ffunction-sections'
+        ccflags.append('-ffunction-sections')
     if get_key_as_bool(config_group, 'armgcc.compiler.optimization.PrepareDataForGarbageCollection'):
-        ccflags += ' -fdata-sections'
+        ccflags.append('-fdata-sections')
     if get_key_as_bool(config_group, 'armgcc.compiler.optimization.EnableUnsafeMatchOptimizations'):
-        ccflags += ' -funsafe-math-optimizations'
+        ccflags.append('-funsafe-math-optimizations')
     if get_key_as_bool(config_group, 'armgcc.compiler.optimization.EnableFastMath'):
-        ccflags += ' -ffast-math'
+        ccflags.append('-ffast-math')
     if get_key_as_bool(config_group, 'armgcc.compiler.optimization.GeneratePositionIndependentCode'):
-        ccflags += ' -fpic'
+        ccflags.append('-fpic')
     if get_key_as_bool(config_group, 'armgcc.compiler.optimization.EnableFastMath'):
-        ccflags += ' -ffast-math'
+        ccflags.append('-ffast-math')
     if get_key_as_bool(config_group, 'armgcc.compiler.optimization.EnableLongCalls', True):
-        ccflags += ' -mlong-calls'
+        ccflags.append('-mlong-calls')
     # Debugging
     # Debug Level: None and -g[1,2,3]
     item = config_group.find('.//armgcc.compiler.optimization.DebugLevel')
     if item is not None:
         if item.text.find('-g3') != -1:
-            ccflags += ' -g3'
-    ccflags += get_key_as_str(config_group, 'armgcc.compiler.optimization.OtherDebuggingFlags', ' {}')
+            ccflags.append('-g3')
+    ccflags.append(get_key_as_str(config_group, 'armgcc.compiler.optimization.OtherDebuggingFlags', '{}'))
     if get_key_as_bool(config_group, 'armgcc.compiler.optimization.GenerateGprofInformation'):
-        ccflags += ' -pg'
+        ccflags.append('-pg')
     if get_key_as_bool(config_group, 'armgcc.compiler.optimization.GenerateProfInformation'):
-        ccflags += ' -p'
+        ccflags.append('-p')
     # Warnings
     if get_key_as_bool(config_group, 'armgcc.compiler.warnings.AllWarnings'):
-        ccflags += ' -Wall'
+        ccflags.append('-Wall')
     if get_key_as_bool(config_group, 'armgcc.compiler.warnings.ExtraWarnings'):
-        ccflags += ' -Wextra'
+        ccflags.append('-Wextra')
     if get_key_as_bool(config_group, 'armgcc.compiler.warnings.Undefined'):
-        ccflags += ' -Wundef'
+        ccflags.append('-Wundef')
     if get_key_as_bool(config_group, 'armgcc.compiler.warnings.WarningsAsErrors'):
-        ccflags += ' -Werror'
+        ccflags.append('-Werror')
     if get_key_as_bool(config_group, 'armgcc.compiler.warnings.CheckSyntaxOnly'):
-        ccflags += ' -fsyntax-only'
+        ccflags.append('-fsyntax-only')
     if get_key_as_bool(config_group, 'armgcc.compiler.warnings.Pedantic'):
-        ccflags += ' -pedentic'
+        ccflags.append('-pedentic')
     if get_key_as_bool(config_group, 'armgcc.compiler.warnings.PedanticWarningsAsErrors'):
-        ccflags += ' -pedantic-errors'
+        ccflags.append('-pedantic-errors')
     if get_key_as_bool(config_group, 'armgcc.compiler.warnings.InhibitAllWarnings'):
-        ccflags += ' -w'
+        ccflags.append('-w')
     # Miscellaneous
-    ccflags += get_key_as_str(config_group, 'armgcc.compiler.miscellaneous.OtherFlags', ' {}')
+    ccflags.append(get_key_as_str(config_group, 'armgcc.compiler.miscellaneous.OtherFlags', '{}'))
     if get_key_as_bool(config_group, 'armgcc.compiler.miscellaneous.Verbose'):
-        ccflags += ' -v'
+        ccflags.append('-v')
     if get_key_as_bool(config_group, 'armgcc.compiler.miscellaneous.SupportAnsiPrograms'):
-        ccflags += ' -ansi'
+        ccflags.append('-ansi')
     # ARM/GNU Linker
     # General
     if get_key_as_bool(config_group, 'armgcc.linker.general.DoNotUseStandardStartFiles'):
-        lflags += ' -nostartfiles'
+        lflags.append('-nostartfiles')
     if get_key_as_bool(config_group, 'armgcc.linker.general.DoNotUseDefaultLibraries'):
-        lflags += ' -nodefaultlibs'
+        lflags.append('-nodefaultlibs')
     if get_key_as_bool(config_group, 'armgcc.linker.general.NoStartupOrDefaultLibs'):
-        lflags += ' -nostdlib'
+        lflags.append('-nostdlib')
     if get_key_as_bool(config_group, 'armgcc.linker.general.OmitAllSymbolInformation'):
-        lflags += ' -s'
+        lflags.append('-s')
     if get_key_as_bool(config_group, 'armgcc.linker.general.NoSharedLibraries'):
-        lflags += ' -static'
+        lflags.append('-static')
     if get_key_as_bool(config_group, 'armgcc.linker.general.GenerateMAPFile', True):
-        lflags += ' -Wl,-Map="' + output + '.map"'
+        lflags.append('-Wl,-Map="' + output + '.map"')
     if get_key_as_bool(config_group, 'armgcc.linker.general.UseNewlibNano'):
-        lflags += ' --specs=nano.specs'
-    # AdditionalSpecs: None './/armgcc.linker.general.AdditionalSpecs'
+        lflags.append('--specs=nano.specs')
+    # AdditionalSpecs: if you want it - read it from './/armgcc.linker.general.AdditionalSpecs'
     # Libraries
-    lflags += ' -Wl,--start-group -lm -lBalancing -lCenter -lHelpersInCppK3 -lRosMath_Static -Wl,--end-group'
-    lflags += get_key_as_strarray(config_group, 'armgcc.linker.libraries.LibrarySearchPaths', ' -L"{}"')
-    lflags += ' -L"C:/Work/Korsar3Mini-trunk/Balancing/Debug"'
-    lflags += ' -L"C:/Work/Korsar3Mini-trunk/Center/Debug"'
-    lflags += ' -L"C:/Work/Korsar3Mini-trunk/HelpersInCppK3/Debug"'
-    lflags += ' -L"C:/Work/Korsar3Mini-trunk/_ext/RosMath/project/RosMath_Static_AS62/Debug"'
+    lflags.append('-Wl,--start-group -lm -lBalancing -lCenter -lHelpersInCppK3 -lRosMath_Static -Wl,--end-group')
+    lflags += get_key_as_strarray(config_group, 'armgcc.linker.libraries.LibrarySearchPaths', '-L"{}"')
+    lflags.append('-L"C:/Work/Korsar3Mini-trunk/Balancing/Debug"')
+    lflags.append('-L"C:/Work/Korsar3Mini-trunk/Center/Debug"')
+    lflags.append('-L"C:/Work/Korsar3Mini-trunk/HelpersInCppK3/Debug"')
+    lflags.append('-L"C:/Work/Korsar3Mini-trunk/_ext/RosMath/project/RosMath_Static_AS62/Debug"')
     # Optimization
     if get_key_as_bool(config_group, 'armgcc.linker.optimization.GarbageCollectUnusedSections'):
-        ccflags += ' -Wl,--gc-sections'
+        lflags.append('-Wl,--gc-sections')
     if get_key_as_bool(config_group, 'armgcc.linker.optimization.EnableUnsafeMatchOptimizations'):
-        ccflags += ' -funsafe-math-optimizations'
+        lflags.append('-funsafe-math-optimizations')
     if get_key_as_bool(config_group, 'armgcc.linker.optimization.EnableFastMath'):
-        ccflags += ' -ffast-math'
+        lflags.append('-ffast-math')
     if get_key_as_bool(config_group, 'armgcc.linker.optimization.GeneratePositionIndependentCode'):
-        ccflags += ' -fpic'
+        lflags.append('-fpic')
     # Memory Settings
     # Miscellaneous
-    lflags += get_key_as_str(config_group, 'armgcc.linker.miscellaneous.LinkerFlags', ' {}')
-    lflags += get_key_as_strarray(config_group, 'armgcc.linker.miscellaneous.OtherOptions', ' -Xlinker {}')
-    lflags += get_key_as_strarray(config_group, 'armgcc.linker.miscellaneous.OtherObjects', ' {}')
+    lflags.append(get_key_as_str(config_group, 'armgcc.linker.miscellaneous.LinkerFlags', '{}'))
+    lflags += get_key_as_strarray(config_group, 'armgcc.linker.miscellaneous.OtherOptions', '-Xlinker {}')
+    lflags += get_key_as_strarray(config_group, 'armgcc.linker.miscellaneous.OtherObjects', '{}')
 
 nw.variable('ccflags', ccflags)
 nw.newline()
@@ -179,7 +179,7 @@ nw.rule('cc',
 nw.newline()
 
 nw.rule('link',
-        command=link + ' -o$out @$out.rsp $lflags',
+        command=link + ' -o $out @$out.rsp $lflags',
         description='LINK $out',
         rspfile='$out.rsp',
         rspfile_content='$in')
