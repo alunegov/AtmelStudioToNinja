@@ -176,7 +176,7 @@ nw.variable('lflags', lflags)
 nw.newline()
 
 nw.rule('cc',
-        command=cc + ' -x c -c $ccflags -MD -MP -MF $out.d -MT $out -o $out $in',
+        command=cc + ' -x c -c $ccflags -MD -MF $out.d -MT $out -o $out $in',
         description='cc $out',
         depfile='$out.d',
         deps='gcc')
