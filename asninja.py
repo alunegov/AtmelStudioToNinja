@@ -1,7 +1,7 @@
 import os
 from xml.etree import ElementTree
+import re
 import ninja_syntax
-
 
 def get_config_group(prj, config_name):
     for group in prj.findall('PropertyGroup'):
@@ -76,8 +76,11 @@ if config_group is not None:
     # Optimization Level: -O[0,1,2,3,s]
     item = config_group.find('.//armgcc.compiler.optimization.level')
     if item is not None:
-        if item.text.find('-O0') != -1:
-            ccflags.append('-O0')
+        opt_level = re.search('(-O[0|1|2|3|s])', item.text)
+        if opt_level:
+            ccflags.append(opt_level.group(0))
+    else:
+        ccflags.append('-O0')
     ccflags += [get_key_as_str(config_group, 'armgcc.compiler.optimization.OtherFlags', '{}')]
     if get_key_as_bool(config_group, 'armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection'):
         ccflags.append('-ffunction-sections')
@@ -97,8 +100,9 @@ if config_group is not None:
     # Debug Level: None and -g[1,2,3]
     item = config_group.find('.//armgcc.compiler.optimization.DebugLevel')
     if item is not None:
-        if item.text.find('-g3') != -1:
-            ccflags.append('-g3')
+        debug_level = re.search('-g[1|2|3]', item.text)
+        if debug_level:
+            ccflags.append(debug_level.group(0))
     ccflags.append(get_key_as_str(config_group, 'armgcc.compiler.optimization.OtherDebuggingFlags', '{}'))
     if get_key_as_bool(config_group, 'armgcc.compiler.optimization.GenerateGprofInformation'):
         ccflags.append('-pg')
@@ -180,7 +184,7 @@ nw.newline()
 
 nw.rule('link',
         command=link + ' -o $out @$out.rsp $lflags',
-        description='LINK $out',
+        description='link $out',
         rspfile='$out.rsp',
         rspfile_content='$in')
 nw.newline()
