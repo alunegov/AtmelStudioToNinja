@@ -6,12 +6,13 @@ import ninja_syntax
 
 class AtmelStudioProject(object):
     def __init__(self, file_name):
+        self.NSMAP = {'msb': 'http://schemas.microsoft.com/developer/msbuild/2003'}
         self.prj = ElementTree.parse(file_name)
         self.config_group = None
 
     def set_config(self, config_name):
         self.config_group = None
-        for group in self.prj.findall('PropertyGroup'):
+        for group in self.prj.findall('msb:PropertyGroup', self.NSMAP):
             if group.attrib.get('Condition', '__none') == " '$(Configuration)' == '{}' ".format(config_name):
                 self.config_group = group
                 break
@@ -19,11 +20,11 @@ class AtmelStudioProject(object):
 
     def get_key_raw(self, name):
         assert self.config_group is not None
-        return self.config_group.find('.//' + name)
+        return self.config_group.find('.//msb:' + name, self.NSMAP)
 
     def get_key_as_bool(self, name, default=False):
         assert self.config_group is not None
-        key = self.config_group.find('.//' + name)
+        key = self.config_group.find('.//msb:' + name, self.NSMAP)
         if key is not None:
             return key.text == 'True'
         else:
@@ -31,7 +32,7 @@ class AtmelStudioProject(object):
 
     def get_key_as_str(self, name, fmt, default=''):
         assert self.config_group is not None
-        key = self.config_group.find('.//' + name)
+        key = self.config_group.find('.//msb:' + name, self.NSMAP)
         if key is not None:
             return fmt.format(key.text)
         else:
@@ -40,7 +41,7 @@ class AtmelStudioProject(object):
     def get_key_as_str_array(self, name, fmt):
         assert self.config_group is not None
         s = []
-        for key in self.config_group.findall('.//' + name + '/ListValues/Value'):
+        for key in self.config_group.findall('.//msb:' + name + '/ListValues/Value', self.NSMAP):
             s.append(fmt.format(key.text))
         return s
 
@@ -48,7 +49,7 @@ class AtmelStudioProject(object):
         src_files = []
         src_files_group = self.prj.getroot()[4]
         if src_files_group is not None:
-            for node in src_files_group.findall('Compile'):
+            for node in src_files_group.findall('msb:Compile', self.NSMAP):
                 src_files.append(node.attrib['Include'].replace('\\', '/'))
         return src_files
 
