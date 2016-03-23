@@ -198,8 +198,8 @@ if src_files_group is not None:
         else:
             if file_ext == '.cpp':
                 obj_files += nw.build('$builddir/' + filename + '.o', 'cxx', '$root/' + file)
-            else:
-                print('Skipping file {}'.format(file))
+            # else:
+                # print('Skipping file {}'.format(file))
     nw.newline()
 
 linker_script = ''
