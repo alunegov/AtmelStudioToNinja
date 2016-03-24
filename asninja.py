@@ -227,7 +227,6 @@ def convert(toolchain, prj, config, output):
     nw.newline()
 
     nw.variable('root', '..')
-    nw.variable('builddir', 'build')
     nw.newline()
 
     nw.variable('ccflags', ccflags)
@@ -254,10 +253,10 @@ def convert(toolchain, prj, config, output):
         filename, file_ext = os.path.splitext(src_file)
         filename = strip_updir(filename)
         if file_ext == '.c':
-            obj_files += nw.build('$builddir/' + filename + '.o', 'cc', '$root/' + src_file)
+            obj_files += nw.build(filename + '.o', 'cc', '$root/' + src_file)
         else:
             if file_ext == '.cpp':
-                obj_files += nw.build('$builddir/' + filename + '.o', 'cxx', '$root/' + src_file)
+                obj_files += nw.build(filename + '.o', 'cxx', '$root/' + src_file)
             # else:
                 # print('Skipping file {}'.format(src_file))
 
