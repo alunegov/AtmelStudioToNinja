@@ -66,13 +66,12 @@ class RefLibrary(object):
 
 def strip_updir(file_name):
     fn = file_name
-    while fn.find('..') == 0:
+    while fn.find('..', 0) == 0:
         fn = fn[3:]
     return fn
 
 
 def detect_linker_script(lflags):
-    linker_script = ''
     for lflag in lflags:
         pos = lflag.find('-T')
         if pos != -1:
@@ -81,9 +80,9 @@ def detect_linker_script(lflags):
 
 def convert(toolchain, prj, config, output):
     cc = os.path.join(toolchain, 'arm-none-eabi-gcc.exe')
-    cxx = os.path.join(toolchain, 'arm-none-eabi-g++.exe')
+    # cxx = os.path.join(toolchain, 'arm-none-eabi-g++.exe')
     link = os.path.join(toolchain, 'arm-none-eabi-gcc.exe')
-    ar = os.path.join(toolchain, 'arm-none-eabi-ar.exe')
+    # ar = os.path.join(toolchain, 'arm-none-eabi-ar.exe')
 
     asp = AtmelStudioProject(prj)
 
