@@ -59,9 +59,16 @@ class RefLibrary(object):
         self.path = path
         self.name = name
 
-    def full_name(self):
-        return self.path + '/lib' + self.name + '.a'
+    def lib_name(self):
+        return 'lib' + self.name
 
+    def full_name(self):
+        return '{}/{}.a'.format(self.path, self.lib_name())
+
+    @classmethod
+    def extract_name(cls, lib_name):
+        # assert lib_name.lenght() > 3
+        return lib_name[3:]
 
 
 def strip_updir(file_name):
@@ -190,10 +197,13 @@ def convert(toolchain, prj, config, output):
         # AdditionalSpecs: if you want it - read it from './/armgcc.linker.general.AdditionalSpecs'
         # Libraries
         prj_libs = asp.key_as_str_array('armgcc.linker.libraries.Libraries', '{}')
-        print(prj_libs)
-        print(' -l'.join(x.name for x in ref_libs))
-        lflags.append('-Wl,--start-group -lm -lBalancing -lCenter -lHelpersInCppK3 -lRosMath_Static -Wl,--end-group')
-        lflags += asp.get_key_as_str_array('armgcc.linker.libraries.LibrarySearchPaths', '-L"{}"')
+        inc_libs = []
+        for lib in prj_libs:
+            inc_libs.append('-l' + RefLibrary.extract_name(lib))
+        for lib in ref_libs:
+            inc_libs.append('-l' + lib.name)
+        lflags.append('-Wl,--start-group {} -Wl,--end-group'.format(' '.join(inc_libs)))
+        lflags += asp.key_as_str_array('armgcc.linker.libraries.LibrarySearchPaths', '-L"{}"')
         for lib in ref_libs:
             lflags.append('-L"{}"'.format(lib.path))
         # Optimization
