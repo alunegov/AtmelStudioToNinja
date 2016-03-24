@@ -5,8 +5,9 @@ import ninja_syntax
 
 
 class AtmelStudioProject(object):
+    NSMAP = {'msb': 'http://schemas.microsoft.com/developer/msbuild/2003'}
+
     def __init__(self, file_name):
-        self.NSMAP = {'msb': 'http://schemas.microsoft.com/developer/msbuild/2003'}
         self.prj = ElementTree.parse(file_name)
         self.config_group = None
 
@@ -47,30 +48,47 @@ class AtmelStudioProject(object):
 
     def src_files(self):
         src_files = []
-        src_files_group = self.prj.getroot()[4]
-        if src_files_group is not None:
-            for node in src_files_group.findall('msb:Compile', self.NSMAP):
-                src_files.append(node.attrib['Include'].replace('\\', '/'))
+        for node in self.prj.findall('.//msb:ItemGroup/msb:Compile', self.NSMAP):
+            src_files.append(node.attrib['Include'].replace('\\', '/'))
         return src_files
+
+    def ref_libs(self):
+        ref_libs = []
+        for node in self.prj.findall('.//msb:ItemGroup/msb:ProjectReference', self.NSMAP):
+            print(node.attrib['Include'].replace('\\', '/'))
+            #node.
+            os.path.split()
+            ref_libs.append(RefLibrary('', ''))
+        return ref_libs
 
 
 class RefLibrary(object):
-    def __init__(self, path, name):
-        self.path = path
-        self.name = name
+    LIB_PREFIX = 'lib'
+    LIB_EXT = '.a'
 
-    def lib_name(self):
-        return 'lib' + self.name
+    def __init__(self, path, raw_name):
+        assert raw_name.find(self.LIB_PREFIX) == -1
+        assert raw_name.find(self.LIB_EXT) == -1
+        self.path = path
+        self.raw_name = raw_name
+
+    def lib_name(self, with_ext=False):
+        if with_ext:
+            return self.LIB_PREFIX + self.raw_name + self.LIB_EXT
+        else:
+            return self.LIB_PREFIX + self.raw_name
 
     def full_name(self, config):
-        return '{}/{}/{}.a'.format(self.path, config, self.lib_name())
+        return '{}/{}/{}'.format(self.path, config, self.lib_name(True))
 
     @classmethod
     def extract_name(cls, lib_name):
-        if lib_name.find('lib', 0, 3) == -1:
-            return lib_name
-        else:
-            return lib_name[3:]
+        s = lib_name
+        if cls.LIB_PREFIX in s:
+            s = s[len(cls.LIB_PREFIX):]
+        if s.endswith(cls.LIB_EXT):
+            s = s[:len(s) - len(cls.LIB_EXT)]
+        return s
 
 
 def strip_updir(file_name):
@@ -99,6 +117,7 @@ def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=
     ccflags = [] + ninja_syntax.as_list(flags)
     lflags = [] + ninja_syntax.as_list(flags)
 
+    asp.ref_libs()
     # ItemGroup/ProjectReference
     ref_libs = [
         RefLibrary('../Balancing', 'Balancing'),
@@ -208,7 +227,7 @@ def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=
         # Libraries
         inc_libs = asp.key_as_strlist('armgcc.linker.libraries.Libraries', '{}')
         for ref_lib in ref_libs:
-            inc_libs.append(ref_lib.name)
+            inc_libs.append(ref_lib.raw_name)
         inc_libs_group = ''
         for inc_lib in inc_libs:
             inc_libs_group += ' -l' + RefLibrary.extract_name(inc_lib)
