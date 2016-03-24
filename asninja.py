@@ -4,13 +4,13 @@ import re
 import ninja_syntax
 
 
-class AtmelStudioProject:
+class AtmelStudioProject(object):
     def __init__(self, file_name):
         self.NSMAP = {'msb': 'http://schemas.microsoft.com/developer/msbuild/2003'}
         self.prj = ElementTree.parse(file_name)
         self.config_group = None
 
-    def set_config(self, config_name):
+    def select_config(self, config_name):
         self.config_group = None
         for group in self.prj.findall('msb:PropertyGroup', self.NSMAP):
             if group.attrib.get('Condition', '__none') == " '$(Configuration)' == '{}' ".format(config_name):
@@ -18,11 +18,11 @@ class AtmelStudioProject:
                 break
         return self.config_group is not None
 
-    def get_key_raw(self, name):
+    def key_raw(self, name):
         assert self.config_group is not None
         return self.config_group.find('.//msb:' + name, self.NSMAP)
 
-    def get_key_as_bool(self, name, default=False):
+    def key_as_bool(self, name, default=False):
         assert self.config_group is not None
         key = self.config_group.find('.//msb:' + name, self.NSMAP)
         if key is not None:
@@ -30,7 +30,7 @@ class AtmelStudioProject:
         else:
             return default
 
-    def get_key_as_str(self, name, fmt, default=''):
+    def key_as_str(self, name, fmt, default=''):
         assert self.config_group is not None
         key = self.config_group.find('.//msb:' + name, self.NSMAP)
         if key is not None:
@@ -38,14 +38,14 @@ class AtmelStudioProject:
         else:
             return default
 
-    def get_key_as_str_array(self, name, fmt):
+    def key_as_str_array(self, name, fmt):
         assert self.config_group is not None
         s = []
         for key in self.config_group.findall('.//msb:' + name + '/msb:ListValues/msb:Value', self.NSMAP):
             s.append(fmt.format(key.text))
         return s
 
-    def get_src_files(self):
+    def src_files(self):
         src_files = []
         src_files_group = self.prj.getroot()[4]
         if src_files_group is not None:
@@ -54,13 +54,14 @@ class AtmelStudioProject:
         return src_files
 
 
-class RefLibrary:
+class RefLibrary(object):
     def __init__(self, path, name):
         self.path = path
         self.name = name
 
     def full_name(self):
         return self.path + '/lib' + self.name + '.a'
+
 
 
 def strip_updir(file_name):
@@ -96,100 +97,100 @@ def convert(toolchain, prj, config, output):
         RefLibrary('C:/Work/Korsar3Mini-trunk/_ext/RosMath/project/RosMath_Static_AS62/Debug', 'RosMath_Static')
     ]
 
-    if asp.set_config(config):
+    if asp.select_config(config):
         # ARM/GNU C Compiler
         # General
-        if asp.get_key_as_bool('armgcc.compiler.general.ChangeDefaultCharTypeUnsigned'):
+        if asp.key_as_bool('armgcc.compiler.general.ChangeDefaultCharTypeUnsigned'):
             ccflags.append('-funsigned-char')
-        if asp.get_key_as_bool('armgcc.compiler.general.ChangeDefaultBitFieldUnsigned'):
+        if asp.key_as_bool('armgcc.compiler.general.ChangeDefaultBitFieldUnsigned'):
             ccflags.append('-funsigned-bitfields')
         # Preprocessor
-        if asp.get_key_as_bool('armgcc.compiler.general.DoNotSearchSystemDirectories'):
+        if asp.key_as_bool('armgcc.compiler.general.DoNotSearchSystemDirectories'):
             ccflags.append('-nostdinc')
-        if asp.get_key_as_bool('armgcc.compiler.general.PreprocessOnly'):
+        if asp.key_as_bool('armgcc.compiler.general.PreprocessOnly'):
             ccflags.append('-E')
         # Symbols
-        ccflags += asp.get_key_as_str_array('armgcc.compiler.symbols.DefSymbols', '-D{}')
+        ccflags += asp.key_as_str_array('armgcc.compiler.symbols.DefSymbols', '-D{}')
         # Directories
-        ccflags += asp.get_key_as_str_array('armgcc.compiler.directories.IncludePaths', '-I"{}"')
+        ccflags += asp.key_as_str_array('armgcc.compiler.directories.IncludePaths', '-I"{}"')
         # Optimization
         # Optimization Level: -O[0,1,2,3,s]
-        key = asp.get_key_raw('armgcc.compiler.optimization.level')
+        key = asp.key_raw('armgcc.compiler.optimization.level')
         if key is not None:
             opt_level = re.search('(-O[0|1|2|3|s])', key.text)
             if opt_level:
                 ccflags.append(opt_level.group(0))
         else:
             ccflags.append('-O0')
-        ccflags += [asp.get_key_as_str('armgcc.compiler.optimization.OtherFlags', '{}')]
-        if asp.get_key_as_bool('armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection'):
+        ccflags += [asp.key_as_str('armgcc.compiler.optimization.OtherFlags', '{}')]
+        if asp.key_as_bool('armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection'):
             ccflags.append('-ffunction-sections')
-        if asp.get_key_as_bool('armgcc.compiler.optimization.PrepareDataForGarbageCollection'):
+        if asp.key_as_bool('armgcc.compiler.optimization.PrepareDataForGarbageCollection'):
             ccflags.append('-fdata-sections')
-        if asp.get_key_as_bool('armgcc.compiler.optimization.EnableUnsafeMatchOptimizations'):
+        if asp.key_as_bool('armgcc.compiler.optimization.EnableUnsafeMatchOptimizations'):
             ccflags.append('-funsafe-math-optimizations')
-        if asp.get_key_as_bool('armgcc.compiler.optimization.EnableFastMath'):
+        if asp.key_as_bool('armgcc.compiler.optimization.EnableFastMath'):
             ccflags.append('-ffast-math')
-        if asp.get_key_as_bool('armgcc.compiler.optimization.GeneratePositionIndependentCode'):
+        if asp.key_as_bool('armgcc.compiler.optimization.GeneratePositionIndependentCode'):
             ccflags.append('-fpic')
-        if asp.get_key_as_bool('armgcc.compiler.optimization.EnableFastMath'):
+        if asp.key_as_bool('armgcc.compiler.optimization.EnableFastMath'):
             ccflags.append('-ffast-math')
-        if asp.get_key_as_bool('armgcc.compiler.optimization.EnableLongCalls', True):
+        if asp.key_as_bool('armgcc.compiler.optimization.EnableLongCalls', True):
             ccflags.append('-mlong-calls')
         # Debugging
         # Debug Level: None and -g[1,2,3]
-        key = asp.get_key_raw('armgcc.compiler.optimization.DebugLevel')
+        key = asp.key_raw('armgcc.compiler.optimization.DebugLevel')
         if key is not None:
             debug_level = re.search('-g[1|2|3]', key.text)
             if debug_level:
                 ccflags.append(debug_level.group(0))
-        ccflags.append(asp.get_key_as_str('armgcc.compiler.optimization.OtherDebuggingFlags', '{}'))
-        if asp.get_key_as_bool('armgcc.compiler.optimization.GenerateGprofInformation'):
+        ccflags.append(asp.key_as_str('armgcc.compiler.optimization.OtherDebuggingFlags', '{}'))
+        if asp.key_as_bool('armgcc.compiler.optimization.GenerateGprofInformation'):
             ccflags.append('-pg')
-        if asp.get_key_as_bool('armgcc.compiler.optimization.GenerateProfInformation'):
+        if asp.key_as_bool('armgcc.compiler.optimization.GenerateProfInformation'):
             ccflags.append('-p')
         # Warnings
-        if asp.get_key_as_bool('armgcc.compiler.warnings.AllWarnings'):
+        if asp.key_as_bool('armgcc.compiler.warnings.AllWarnings'):
             ccflags.append('-Wall')
-        if asp.get_key_as_bool('armgcc.compiler.warnings.ExtraWarnings'):
+        if asp.key_as_bool('armgcc.compiler.warnings.ExtraWarnings'):
             ccflags.append('-Wextra')
-        if asp.get_key_as_bool('armgcc.compiler.warnings.Undefined'):
+        if asp.key_as_bool('armgcc.compiler.warnings.Undefined'):
             ccflags.append('-Wundef')
-        if asp.get_key_as_bool('armgcc.compiler.warnings.WarningsAsErrors'):
+        if asp.key_as_bool('armgcc.compiler.warnings.WarningsAsErrors'):
             ccflags.append('-Werror')
-        if asp.get_key_as_bool('armgcc.compiler.warnings.CheckSyntaxOnly'):
+        if asp.key_as_bool('armgcc.compiler.warnings.CheckSyntaxOnly'):
             ccflags.append('-fsyntax-only')
-        if asp.get_key_as_bool('armgcc.compiler.warnings.Pedantic'):
+        if asp.key_as_bool('armgcc.compiler.warnings.Pedantic'):
             ccflags.append('-pedentic')
-        if asp.get_key_as_bool('armgcc.compiler.warnings.PedanticWarningsAsErrors'):
+        if asp.key_as_bool('armgcc.compiler.warnings.PedanticWarningsAsErrors'):
             ccflags.append('-pedantic-errors')
-        if asp.get_key_as_bool('armgcc.compiler.warnings.InhibitAllWarnings'):
+        if asp.key_as_bool('armgcc.compiler.warnings.InhibitAllWarnings'):
             ccflags.append('-w')
         # Miscellaneous
-        ccflags.append(asp.get_key_as_str('armgcc.compiler.miscellaneous.OtherFlags', '{}'))
-        if asp.get_key_as_bool('armgcc.compiler.miscellaneous.Verbose'):
+        ccflags.append(asp.key_as_str('armgcc.compiler.miscellaneous.OtherFlags', '{}'))
+        if asp.key_as_bool('armgcc.compiler.miscellaneous.Verbose'):
             ccflags.append('-v')
-        if asp.get_key_as_bool('armgcc.compiler.miscellaneous.SupportAnsiPrograms'):
+        if asp.key_as_bool('armgcc.compiler.miscellaneous.SupportAnsiPrograms'):
             ccflags.append('-ansi')
         # ARM/GNU Linker
         # General
-        if asp.get_key_as_bool('armgcc.linker.general.DoNotUseStandardStartFiles'):
+        if asp.key_as_bool('armgcc.linker.general.DoNotUseStandardStartFiles'):
             lflags.append('-nostartfiles')
-        if asp.get_key_as_bool('armgcc.linker.general.DoNotUseDefaultLibraries'):
+        if asp.key_as_bool('armgcc.linker.general.DoNotUseDefaultLibraries'):
             lflags.append('-nodefaultlibs')
-        if asp.get_key_as_bool('armgcc.linker.general.NoStartupOrDefaultLibs'):
+        if asp.key_as_bool('armgcc.linker.general.NoStartupOrDefaultLibs'):
             lflags.append('-nostdlib')
-        if asp.get_key_as_bool('armgcc.linker.general.OmitAllSymbolInformation'):
+        if asp.key_as_bool('armgcc.linker.general.OmitAllSymbolInformation'):
             lflags.append('-s')
-        if asp.get_key_as_bool('armgcc.linker.general.NoSharedLibraries'):
+        if asp.key_as_bool('armgcc.linker.general.NoSharedLibraries'):
             lflags.append('-static')
-        if asp.get_key_as_bool('armgcc.linker.general.GenerateMAPFile', True):
+        if asp.key_as_bool('armgcc.linker.general.GenerateMAPFile', True):
             lflags.append('-Wl,-Map="' + output + '.map"')
-        if asp.get_key_as_bool('armgcc.linker.general.UseNewlibNano'):
+        if asp.key_as_bool('armgcc.linker.general.UseNewlibNano'):
             lflags.append('--specs=nano.specs')
         # AdditionalSpecs: if you want it - read it from './/armgcc.linker.general.AdditionalSpecs'
         # Libraries
-        prj_libs = asp.get_key_as_str_array('armgcc.linker.libraries.Libraries', '-l{}')
+        prj_libs = asp.key_as_str_array('armgcc.linker.libraries.Libraries', '{}')
         print(prj_libs)
         print(' -l'.join(x.name for x in ref_libs))
         lflags.append('-Wl,--start-group -lm -lBalancing -lCenter -lHelpersInCppK3 -lRosMath_Static -Wl,--end-group')
@@ -197,19 +198,19 @@ def convert(toolchain, prj, config, output):
         for lib in ref_libs:
             lflags.append('-L"{}"'.format(lib.path))
         # Optimization
-        if asp.get_key_as_bool('armgcc.linker.optimization.GarbageCollectUnusedSections'):
+        if asp.key_as_bool('armgcc.linker.optimization.GarbageCollectUnusedSections'):
             lflags.append('-Wl,--gc-sections')
-        if asp.get_key_as_bool('armgcc.linker.optimization.EnableUnsafeMatchOptimizations'):
+        if asp.key_as_bool('armgcc.linker.optimization.EnableUnsafeMatchOptimizations'):
             lflags.append('-funsafe-math-optimizations')
-        if asp.get_key_as_bool('armgcc.linker.optimization.EnableFastMath'):
+        if asp.key_as_bool('armgcc.linker.optimization.EnableFastMath'):
             lflags.append('-ffast-math')
-        if asp.get_key_as_bool('armgcc.linker.optimization.GeneratePositionIndependentCode'):
+        if asp.key_as_bool('armgcc.linker.optimization.GeneratePositionIndependentCode'):
             lflags.append('-fpic')
         # Memory Settings
         # Miscellaneous
-        lflags.append(asp.get_key_as_str('armgcc.linker.miscellaneous.LinkerFlags', '{}'))
-        lflags += asp.get_key_as_str_array('armgcc.linker.miscellaneous.OtherOptions', '-Xlinker {}')
-        lflags += asp.get_key_as_str_array('armgcc.linker.miscellaneous.OtherObjects', '{}')
+        lflags.append(asp.key_as_str('armgcc.linker.miscellaneous.LinkerFlags', '{}'))
+        lflags += asp.key_as_str_array('armgcc.linker.miscellaneous.OtherOptions', '-Xlinker {}')
+        lflags += asp.key_as_str_array('armgcc.linker.miscellaneous.OtherObjects', '{}')
 
     nw = ninja_syntax.Writer(open('build.ninja', 'w'), 120)
 
@@ -240,7 +241,7 @@ def convert(toolchain, prj, config, output):
     nw.newline()
 
     obj_files = []
-    for src_file in asp.get_src_files():
+    for src_file in asp.src_files():
         filename, file_ext = os.path.splitext(src_file)
         filename = strip_updir(filename)
         if file_ext == '.c':
