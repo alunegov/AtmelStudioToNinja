@@ -41,7 +41,7 @@ class AtmelStudioProject:
     def get_key_as_str_array(self, name, fmt):
         assert self.config_group is not None
         s = []
-        for key in self.config_group.findall('.//msb:' + name + '/ListValues/Value', self.NSMAP):
+        for key in self.config_group.findall('.//msb:' + name + '/msb:ListValues/msb:Value', self.NSMAP):
             s.append(fmt.format(key.text))
         return s
 
