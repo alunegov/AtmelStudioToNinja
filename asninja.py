@@ -92,6 +92,7 @@ class RefLibrary(object):
 
 
 def strip_updir(file_name):
+    """Strips all '../' from start of file_name"""
     fn = file_name
     while fn.find('..', 0) == 0:
         fn = fn[3:]
@@ -99,6 +100,8 @@ def strip_updir(file_name):
 
 
 def detect_linker_script(lflags):
+    """Search '-T' params in lflags, strips first '../' from finded value"""
+    linker_script = None
     for lflag in lflags:
         pos = lflag.find('-T')
         if pos != -1:
