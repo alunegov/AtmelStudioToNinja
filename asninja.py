@@ -10,22 +10,32 @@ class AtmelStudioProject(object):
     def __init__(self, file_name):
         self.prj = ElementTree.parse(file_name)
         self.config_group = None
+        if self.prj:
+            self.toolchain_settings = 'ArmGcc'
+            self.ref_libs = self.detect_ref_libs()
+
+    def is_cpp(self):
+        return False
+
+    def is_lib(self):
+        return False
 
     def select_config(self, config_name):
         self.config_group = None
         for group in self.prj.findall('msb:PropertyGroup', self.NSMAP):
-            if group.attrib.get('Condition', '__none') == " '$(Configuration)' == '{}' ".format(config_name):
+            if group.attrib.get('Condition', '__') == " '$(Configuration)' == '{}' ".format(config_name):
                 self.config_group = group
                 break
         return self.config_group is not None
 
     def key_raw(self, name):
         assert self.config_group is not None
-        return self.config_group.find('.//msb:' + name, self.NSMAP)
+        key_xpath = './/{0}:{1}/{0}:{2}'.format('msb', self.toolchain_settings, name)
+        return self.config_group.find(key_xpath, self.NSMAP)
 
     def key_as_bool(self, name, default=False):
         assert self.config_group is not None
-        key = self.config_group.find('.//msb:' + name, self.NSMAP)
+        key = self.key_raw(name)
         if key is not None:
             return key.text == 'True'
         else:
@@ -33,7 +43,7 @@ class AtmelStudioProject(object):
 
     def key_as_str(self, name, fmt, default=''):
         assert self.config_group is not None
-        key = self.config_group.find('.//msb:' + name, self.NSMAP)
+        key = self.key_raw(name)
         if key is not None:
             return fmt.format(key.text)
         else:
@@ -42,7 +52,8 @@ class AtmelStudioProject(object):
     def key_as_strlist(self, name, fmt):
         assert self.config_group is not None
         s = []
-        for key in self.config_group.findall('.//msb:' + name + '/msb:ListValues/msb:Value', self.NSMAP):
+        key_xpath = './/{0}:{1}/{0}:{2}/{0}:ListValues/{0}:Value'.format('msb', self.toolchain_settings, name)
+        for key in self.config_group.findall(key_xpath, self.NSMAP):
             s.append(fmt.format(key.text))
         return s
 
@@ -52,7 +63,138 @@ class AtmelStudioProject(object):
             src_files.append(node.attrib['Include'].replace('\\', '/'))
         return src_files
 
-    def ref_libs(self):
+    def compiler_flags(self, compiler, defs, undefs):
+        assert self.config_group is not None
+        flags = []
+        prefix = compiler + '.compiler.'
+        # General
+        if self.key_as_bool(prefix + 'general.ChangeDefaultCharTypeUnsigned'):
+            flags.append('-funsigned-char')
+        if self.key_as_bool(prefix + 'general.ChangeDefaultBitFieldUnsigned'):
+            flags.append('-funsigned-bitfields')
+        # Preprocessor
+        if self.key_as_bool(prefix + 'general.DoNotSearchSystemDirectories'):
+            flags.append('-nostdinc')
+        if self.key_as_bool(prefix + 'general.PreprocessOnly'):
+            flags.append('-E')
+        # Symbols
+        inc_defs = ninja_syntax.as_list(defs)
+        inc_defs += self.key_as_strlist(prefix + 'symbols.DefSymbols', '{}')
+        for undef in ninja_syntax.as_list(undefs):
+            if inc_defs.count(undef) > 0:
+                assert inc_defs.count(undef) == 1
+                inc_defs.remove(undef)
+        flags.extend('-D{}'.format(inc_def) for inc_def in inc_defs)
+        # Directories
+        flags += self.key_as_strlist(prefix + 'directories.IncludePaths', '-I"{}"')
+        # Optimization
+        # Optimization Level: -O[0,1,2,3,s]
+        key = self.key_raw(prefix + 'optimization.level')
+        if key is not None:
+            opt_level = re.search('(-O[0|1|2|3|s])', key.text)
+            if opt_level:
+                flags.append(opt_level.group(0))
+        else:
+            flags.append('-O0')
+        flags += [self.key_as_str(prefix + 'optimization.OtherFlags', '{}')]
+        if self.key_as_bool(prefix + 'optimization.PrepareFunctionsForGarbageCollection'):
+            flags.append('-ffunction-sections')
+        if self.key_as_bool(prefix + 'optimization.PrepareDataForGarbageCollection'):
+            flags.append('-fdata-sections')
+        if self.key_as_bool(prefix + 'optimization.EnableUnsafeMatchOptimizations'):
+            flags.append('-funsafe-math-optimizations')
+        if self.key_as_bool(prefix + 'optimization.EnableFastMath'):
+            flags.append('-ffast-math')
+        if self.key_as_bool(prefix + 'optimization.GeneratePositionIndependentCode'):
+            flags.append('-fpic')
+        if self.key_as_bool(prefix + 'optimization.EnableFastMath'):
+            flags.append('-ffast-math')
+        if self.key_as_bool(prefix + 'optimization.EnableLongCalls', True):
+            flags.append('-mlong-calls')
+        # Debugging
+        # Debug Level: None and -g[1,2,3]
+        key = self.key_raw(prefix + 'optimization.DebugLevel')
+        if key is not None:
+            debug_level = re.search('-g[1|2|3]', key.text)
+            if debug_level:
+                flags.append(debug_level.group(0))
+        flags.append(self.key_as_str(prefix + 'optimization.OtherDebuggingFlags', '{}'))
+        if self.key_as_bool(prefix + 'optimization.GenerateGprofInformation'):
+            flags.append('-pg')
+        if self.key_as_bool(prefix + 'optimization.GenerateProfInformation'):
+            flags.append('-p')
+        # Warnings
+        if self.key_as_bool(prefix + 'warnings.AllWarnings'):
+            flags.append('-Wall')
+        if self.key_as_bool(prefix + 'warnings.ExtraWarnings'):
+            flags.append('-Wextra')
+        if self.key_as_bool(prefix + 'warnings.Undefined'):
+            flags.append('-Wundef')
+        if self.key_as_bool(prefix + 'warnings.WarningsAsErrors'):
+            flags.append('-Werror')
+        if self.key_as_bool(prefix + 'warnings.CheckSyntaxOnly'):
+            flags.append('-fsyntax-only')
+        if self.key_as_bool(prefix + 'warnings.Pedantic'):
+            flags.append('-pedentic')
+        if self.key_as_bool(prefix + 'warnings.PedanticWarningsAsErrors'):
+            flags.append('-pedantic-errors')
+        if self.key_as_bool(prefix + 'warnings.InhibitAllWarnings'):
+            flags.append('-w')
+        # Miscellaneous
+        flags.append(self.key_as_str(prefix + 'miscellaneous.OtherFlags', '{}'))
+        if self.key_as_bool(prefix + 'miscellaneous.Verbose'):
+            flags.append('-v')
+        if self.key_as_bool(prefix + 'miscellaneous.SupportAnsiPrograms'):
+            flags.append('-ansi')
+        return flags
+
+    def linker_flags(self, output, outdir):
+        flags = []
+        prefix = self.toolchain_settings.lower() + '.linker.'
+        # General
+        if self.key_as_bool(prefix + 'general.DoNotUseStandardStartFiles'):
+            flags.append('-nostartfiles')
+        if self.key_as_bool(prefix + 'general.DoNotUseDefaultLibraries'):
+            flags.append('-nodefaultlibs')
+        if self.key_as_bool(prefix + 'general.NoStartupOrDefaultLibs'):
+            flags.append('-nostdlib')
+        if self.key_as_bool(prefix + 'general.OmitAllSymbolInformation'):
+            flags.append('-s')
+        if self.key_as_bool(prefix + 'general.NoSharedLibraries'):
+            flags.append('-static')
+        if self.key_as_bool(prefix + 'general.GenerateMAPFile', True):
+            flags.append('-Wl,-Map="' + output + '.map"')
+        if self.key_as_bool(prefix + 'general.UseNewlibNano'):
+            flags.append('--specs=nano.specs')
+        # AdditionalSpecs: if you want it - read it from './/armgcc.linker.general.AdditionalSpecs'
+        # Libraries
+        inc_libs = self.key_as_strlist(prefix + 'libraries.Libraries', '{}')
+        for ref_lib in self.ref_libs:
+            inc_libs.append(ref_lib.raw_name)
+        inc_libs_group = ''
+        for inc_lib in inc_libs:
+            inc_libs_group += ' -l' + RefLibrary.extract_name(inc_lib)
+        flags.append('-Wl,--start-group{} -Wl,--end-group'.format(inc_libs_group))
+        flags += self.key_as_strlist(prefix + 'libraries.LibrarySearchPaths', '-L"{}"')
+        for lib in self.ref_libs:
+            flags.append('-L"../{}/{}"'.format(lib.path, outdir))
+        # Optimization
+        if self.key_as_bool(prefix + 'optimization.GarbageCollectUnusedSections'):
+            flags.append('-Wl,--gc-sections')
+        if self.key_as_bool(prefix + 'optimization.EnableUnsafeMatchOptimizations'):
+            flags.append('-funsafe-math-optimizations')
+        if self.key_as_bool(prefix + 'optimization.EnableFastMath'):
+            flags.append('-ffast-math')
+        if self.key_as_bool(prefix + 'optimization.GeneratePositionIndependentCode'):
+            flags.append('-fpic')
+        # Memory Settings
+        # Miscellaneous
+        flags.append(self.key_as_str(prefix + 'miscellaneous.LinkerFlags', '{}'))
+        flags += self.key_as_strlist(prefix + 'miscellaneous.OtherOptions', '-Xlinker {}')
+        flags += self.key_as_strlist(prefix + 'miscellaneous.OtherObjects', '{}')
+        return flags
+
+    def detect_ref_libs(self):
         ref_libs = []
         for node in self.prj.findall('.//msb:ItemGroup/msb:ProjectReference', self.NSMAP):
             path, prj_name = os.path.split(node.attrib['Include'].replace('\\', '/'))
@@ -115,142 +257,33 @@ def detect_linker_script(lflags):
 
 def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=''):
     cc = os.path.join(toolchain, 'arm-none-eabi-gcc.exe')
-    # cxx = os.path.join(toolchain, 'arm-none-eabi-g++.exe')
-    link = os.path.join(toolchain, 'arm-none-eabi-gcc.exe')
-    # ar = os.path.join(toolchain, 'arm-none-eabi-ar.exe')
+    cxx = os.path.join(toolchain, 'arm-none-eabi-g++.exe')
+    link_cc = cc
+    link_cxx = cxx
+    ar = os.path.join(toolchain, 'arm-none-eabi-ar.exe')
+
+    outdir = config + config_postfix
 
     asp = AtmelStudioProject(prj)
 
     ccflags = [] + ninja_syntax.as_list(flags)
+    cxxflags = [] + ninja_syntax.as_list(flags)
     lflags = [] + ninja_syntax.as_list(flags)
-
-    ref_libs = asp.ref_libs()
+    arflags = []
 
     if asp.select_config(config):
         # ARM/GNU C Compiler
-        # General
-        if asp.key_as_bool('armgcc.compiler.general.ChangeDefaultCharTypeUnsigned'):
-            ccflags.append('-funsigned-char')
-        if asp.key_as_bool('armgcc.compiler.general.ChangeDefaultBitFieldUnsigned'):
-            ccflags.append('-funsigned-bitfields')
-        # Preprocessor
-        if asp.key_as_bool('armgcc.compiler.general.DoNotSearchSystemDirectories'):
-            ccflags.append('-nostdinc')
-        if asp.key_as_bool('armgcc.compiler.general.PreprocessOnly'):
-            ccflags.append('-E')
-        # Symbols
-        inc_defs = ninja_syntax.as_list(defs)
-        inc_defs += asp.key_as_strlist('armgcc.compiler.symbols.DefSymbols', '{}')
-        for undef in ninja_syntax.as_list(undefs):
-            if inc_defs.count(undef) > 0:
-                assert inc_defs.count(undef) == 1
-                inc_defs.remove(undef)
-        ccflags.extend('-D{}'.format(inc_def) for inc_def in inc_defs)
-        # Directories
-        ccflags += asp.key_as_strlist('armgcc.compiler.directories.IncludePaths', '-I"{}"')
-        # Optimization
-        # Optimization Level: -O[0,1,2,3,s]
-        key = asp.key_raw('armgcc.compiler.optimization.level')
-        if key is not None:
-            opt_level = re.search('(-O[0|1|2|3|s])', key.text)
-            if opt_level:
-                ccflags.append(opt_level.group(0))
-        else:
-            ccflags.append('-O0')
-        ccflags += [asp.key_as_str('armgcc.compiler.optimization.OtherFlags', '{}')]
-        if asp.key_as_bool('armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection'):
-            ccflags.append('-ffunction-sections')
-        if asp.key_as_bool('armgcc.compiler.optimization.PrepareDataForGarbageCollection'):
-            ccflags.append('-fdata-sections')
-        if asp.key_as_bool('armgcc.compiler.optimization.EnableUnsafeMatchOptimizations'):
-            ccflags.append('-funsafe-math-optimizations')
-        if asp.key_as_bool('armgcc.compiler.optimization.EnableFastMath'):
-            ccflags.append('-ffast-math')
-        if asp.key_as_bool('armgcc.compiler.optimization.GeneratePositionIndependentCode'):
-            ccflags.append('-fpic')
-        if asp.key_as_bool('armgcc.compiler.optimization.EnableFastMath'):
-            ccflags.append('-ffast-math')
-        if asp.key_as_bool('armgcc.compiler.optimization.EnableLongCalls', True):
-            ccflags.append('-mlong-calls')
-        # Debugging
-        # Debug Level: None and -g[1,2,3]
-        key = asp.key_raw('armgcc.compiler.optimization.DebugLevel')
-        if key is not None:
-            debug_level = re.search('-g[1|2|3]', key.text)
-            if debug_level:
-                ccflags.append(debug_level.group(0))
-        ccflags.append(asp.key_as_str('armgcc.compiler.optimization.OtherDebuggingFlags', '{}'))
-        if asp.key_as_bool('armgcc.compiler.optimization.GenerateGprofInformation'):
-            ccflags.append('-pg')
-        if asp.key_as_bool('armgcc.compiler.optimization.GenerateProfInformation'):
-            ccflags.append('-p')
-        # Warnings
-        if asp.key_as_bool('armgcc.compiler.warnings.AllWarnings'):
-            ccflags.append('-Wall')
-        if asp.key_as_bool('armgcc.compiler.warnings.ExtraWarnings'):
-            ccflags.append('-Wextra')
-        if asp.key_as_bool('armgcc.compiler.warnings.Undefined'):
-            ccflags.append('-Wundef')
-        if asp.key_as_bool('armgcc.compiler.warnings.WarningsAsErrors'):
-            ccflags.append('-Werror')
-        if asp.key_as_bool('armgcc.compiler.warnings.CheckSyntaxOnly'):
-            ccflags.append('-fsyntax-only')
-        if asp.key_as_bool('armgcc.compiler.warnings.Pedantic'):
-            ccflags.append('-pedentic')
-        if asp.key_as_bool('armgcc.compiler.warnings.PedanticWarningsAsErrors'):
-            ccflags.append('-pedantic-errors')
-        if asp.key_as_bool('armgcc.compiler.warnings.InhibitAllWarnings'):
-            ccflags.append('-w')
-        # Miscellaneous
-        ccflags.append(asp.key_as_str('armgcc.compiler.miscellaneous.OtherFlags', '{}'))
-        if asp.key_as_bool('armgcc.compiler.miscellaneous.Verbose'):
-            ccflags.append('-v')
-        if asp.key_as_bool('armgcc.compiler.miscellaneous.SupportAnsiPrograms'):
-            ccflags.append('-ansi')
+        ccflags += asp.compiler_flags('armgcc', defs, undefs)
+        # ARM/GNU C++ Compiler
+        if asp.is_cpp():
+            cxxflags += asp.compiler_flags('armgcccpp', defs, undefs)
         # ARM/GNU Linker
-        # General
-        if asp.key_as_bool('armgcc.linker.general.DoNotUseStandardStartFiles'):
-            lflags.append('-nostartfiles')
-        if asp.key_as_bool('armgcc.linker.general.DoNotUseDefaultLibraries'):
-            lflags.append('-nodefaultlibs')
-        if asp.key_as_bool('armgcc.linker.general.NoStartupOrDefaultLibs'):
-            lflags.append('-nostdlib')
-        if asp.key_as_bool('armgcc.linker.general.OmitAllSymbolInformation'):
-            lflags.append('-s')
-        if asp.key_as_bool('armgcc.linker.general.NoSharedLibraries'):
-            lflags.append('-static')
-        if asp.key_as_bool('armgcc.linker.general.GenerateMAPFile', True):
-            lflags.append('-Wl,-Map="' + output + '.map"')
-        if asp.key_as_bool('armgcc.linker.general.UseNewlibNano'):
-            lflags.append('--specs=nano.specs')
-        # AdditionalSpecs: if you want it - read it from './/armgcc.linker.general.AdditionalSpecs'
-        # Libraries
-        inc_libs = asp.key_as_strlist('armgcc.linker.libraries.Libraries', '{}')
-        for ref_lib in ref_libs:
-            inc_libs.append(ref_lib.raw_name)
-        inc_libs_group = ''
-        for inc_lib in inc_libs:
-            inc_libs_group += ' -l' + RefLibrary.extract_name(inc_lib)
-        lflags.append('-Wl,--start-group{} -Wl,--end-group'.format(inc_libs_group))
-        lflags += asp.key_as_strlist('armgcc.linker.libraries.LibrarySearchPaths', '-L"{}"')
-        for lib in ref_libs:
-            lflags.append('-L"../{}/{}"'.format(lib.path, config + config_postfix))
-        # Optimization
-        if asp.key_as_bool('armgcc.linker.optimization.GarbageCollectUnusedSections'):
-            lflags.append('-Wl,--gc-sections')
-        if asp.key_as_bool('armgcc.linker.optimization.EnableUnsafeMatchOptimizations'):
-            lflags.append('-funsafe-math-optimizations')
-        if asp.key_as_bool('armgcc.linker.optimization.EnableFastMath'):
-            lflags.append('-ffast-math')
-        if asp.key_as_bool('armgcc.linker.optimization.GeneratePositionIndependentCode'):
-            lflags.append('-fpic')
-        # Memory Settings
-        # Miscellaneous
-        lflags.append(asp.key_as_str('armgcc.linker.miscellaneous.LinkerFlags', '{}'))
-        lflags += asp.key_as_strlist('armgcc.linker.miscellaneous.OtherOptions', '-Xlinker {}')
-        lflags += asp.key_as_strlist('armgcc.linker.miscellaneous.OtherObjects', '{}')
+        if asp.is_lib():
+            arflags += ['-r']  # asp.archiver_flags(output, outdir)
+        else:
+            lflags += asp.linker_flags(output, outdir)
 
-    nw = ninja_syntax.Writer(open(os.path.join(config + config_postfix, 'build.ninja'), 'w'), 120)
+    nw = ninja_syntax.Writer(open(os.path.join(outdir, 'build.ninja'), 'w'), 120)
 
     nw.variable('ninja_required_version', '1.3')
     nw.newline()
@@ -259,8 +292,8 @@ def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=
     nw.variable('src', '$builddir/..')
     nw.newline()
 
-    for ref_lib in ref_libs:
-        nw.comment('subninja $builddir/../{}/{}/build.ninja'.format(ref_lib.path, config + config_postfix))
+    for ref_lib in asp.ref_libs:
+        nw.comment('subninja $builddir/../{}/{}/build.ninja'.format(ref_lib.path, outdir))
     nw.newline()
 
     nw.variable('ccflags', ccflags)
@@ -275,11 +308,29 @@ def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=
             deps='gcc')
     nw.newline()
 
-    nw.rule('link',
-            command=link + ' -o $out @$out.rsp $lflags',
-            description='link $out',
-            rspfile='$out.rsp',
-            rspfile_content='$in')
+    if asp.is_cpp():
+        nw.rule('cxx',
+                command=cxx + ' -c $ccflags -MD -MF $out.d -MT $out -o $out $in',
+                description='cxx $out',
+                depfile='$out.d',
+                deps='gcc')
+        nw.newline()
+
+    if asp.is_lib():
+        nw.rule('ar',
+                command=ar + ' $arflags -o$out $in',
+                description='ar $out')
+    else:
+        if asp.is_cpp():
+            link = link_cxx
+        else:
+            link = link_cc
+
+        nw.rule('link',
+                command=link + ' -o $out @$out.rsp $lflags',
+                description='link $out',
+                rspfile='$out.rsp',
+                rspfile_content='$in')
     nw.newline()
 
     obj_files = []
@@ -290,27 +341,33 @@ def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=
             obj_files += nw.build('$builddir/' + filename + '.o', 'cc', '$src/' + src_file)
         else:
             if file_ext == '.cpp':
+                assert not asp.is_cpp()
                 obj_files += nw.build('$builddir/' + filename + '.o', 'cxx', '$src/' + src_file)
             # else:
                 # print('Skipping file {}'.format(src_file))
 
-    implicit_dep = []
-    #
-    linker_script = detect_linker_script(lflags)
-    if linker_script:
-        print('linker_script = ' + linker_script)
-        implicit_dep.append('$src/' + linker_script)
-    #
-    for lib in ref_libs:
-        implicit_dep.append('$builddir/../' + lib.full_name(config + config_postfix))
-
     if obj_files:
-        nw.newline()
-        nw.build('$builddir/' + output + '.elf', 'link', obj_files,
-                 implicit=implicit_dep)
-        nw.newline()
+        if asp.is_lib():
+            nw.newline()
+            nw.build('$builddir/' + output + '.a', 'ar', obj_files)
+            nw.newline()
+        else:
+            implicit_dep = []
+            #
+            linker_script = detect_linker_script(lflags)
+            if linker_script:
+                print('linker_script = ' + linker_script)
+                implicit_dep.append('$src/' + linker_script)
+            #
+            for lib in asp.ref_libs:
+                implicit_dep.append('$builddir/../' + lib.full_name(outdir))
 
-    nw.default('$builddir/' + output + '.elf')
+            nw.newline()
+            nw.build('$builddir/' + output + '.elf', 'link', obj_files,
+                     implicit=implicit_dep)
+            nw.newline()
+
+            nw.default('$builddir/' + output + '.elf')
 
     nw.close()
 
