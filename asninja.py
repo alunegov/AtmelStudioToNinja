@@ -38,7 +38,7 @@ class AtmelStudioProject(object):
         else:
             return default
 
-    def key_as_str_array(self, name, fmt):
+    def key_as_strlist(self, name, fmt):
         assert self.config_group is not None
         s = []
         for key in self.config_group.findall('.//msb:' + name + '/msb:ListValues/msb:Value', self.NSMAP):
@@ -62,13 +62,15 @@ class RefLibrary(object):
     def lib_name(self):
         return 'lib' + self.name
 
-    def full_name(self):
-        return '{}/{}.a'.format(self.path, self.lib_name())
+    def full_name(self, config):
+        return '{}/{}/{}.a'.format(self.path, config, self.lib_name())
 
     @classmethod
     def extract_name(cls, lib_name):
-        # assert lib_name.lenght() > 3
-        return lib_name[3:]
+        if lib_name.find('lib', 0, 3) == -1:
+            return lib_name
+        else:
+            return lib_name[3:]
 
 
 def strip_updir(file_name):
@@ -82,10 +84,11 @@ def detect_linker_script(lflags):
     for lflag in lflags:
         pos = lflag.find('-T')
         if pos != -1:
-            return lflag[pos + 2:]
+            # linker script in linker flags is relative to makefile (build dir)
+            return lflag[pos + 2 + 3:]
 
 
-def convert(toolchain, prj, config, output):
+def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=''):
     cc = os.path.join(toolchain, 'arm-none-eabi-gcc.exe')
     # cxx = os.path.join(toolchain, 'arm-none-eabi-g++.exe')
     link = os.path.join(toolchain, 'arm-none-eabi-gcc.exe')
@@ -93,14 +96,15 @@ def convert(toolchain, prj, config, output):
 
     asp = AtmelStudioProject(prj)
 
-    ccflags = ['-mthumb', '-mcpu=cortex-m4', '-D__SAM4S8C__']
-    lflags = ['-mthumb', '-mcpu=cortex-m4']
+    ccflags = [] + ninja_syntax.as_list(flags)
+    lflags = [] + ninja_syntax.as_list(flags)
 
+    # ItemGroup/ProjectReference
     ref_libs = [
-        RefLibrary('C:/Work/Korsar3Mini-trunk/Balancing/Debug', 'Balancing'),
-        RefLibrary('C:/Work/Korsar3Mini-trunk/Center/Debug', 'Center'),
-        RefLibrary('C:/Work/Korsar3Mini-trunk/HelpersInCppK3/Debug', 'HelpersInCppK3'),
-        RefLibrary('C:/Work/Korsar3Mini-trunk/_ext/RosMath/project/RosMath_Static_AS62/Debug', 'RosMath_Static')
+        RefLibrary('../Balancing', 'Balancing'),
+        RefLibrary('../Center', 'Center'),
+        RefLibrary('../HelpersInCppK3', 'HelpersInCppK3'),
+        RefLibrary('../_ext/RosMath/project/RosMath_Static_AS62', 'RosMath_Static')
     ]
 
     if asp.select_config(config):
@@ -116,9 +120,15 @@ def convert(toolchain, prj, config, output):
         if asp.key_as_bool('armgcc.compiler.general.PreprocessOnly'):
             ccflags.append('-E')
         # Symbols
-        ccflags += asp.key_as_str_array('armgcc.compiler.symbols.DefSymbols', '-D{}')
+        inc_defs = ninja_syntax.as_list(defs)
+        inc_defs += asp.key_as_strlist('armgcc.compiler.symbols.DefSymbols', '{}')
+        for undef in ninja_syntax.as_list(undefs):
+            if inc_defs.count(undef) > 0:
+                assert inc_defs.count(undef) == 1
+                inc_defs.remove(undef)
+        ccflags.extend('-D{}'.format(inc_def) for inc_def in inc_defs)
         # Directories
-        ccflags += asp.key_as_str_array('armgcc.compiler.directories.IncludePaths', '-I"{}"')
+        ccflags += asp.key_as_strlist('armgcc.compiler.directories.IncludePaths', '-I"{}"')
         # Optimization
         # Optimization Level: -O[0,1,2,3,s]
         key = asp.key_raw('armgcc.compiler.optimization.level')
@@ -196,16 +206,16 @@ def convert(toolchain, prj, config, output):
             lflags.append('--specs=nano.specs')
         # AdditionalSpecs: if you want it - read it from './/armgcc.linker.general.AdditionalSpecs'
         # Libraries
-        prj_libs = asp.key_as_str_array('armgcc.linker.libraries.Libraries', '{}')
-        inc_libs = []
-        for lib in prj_libs:
-            inc_libs.append('-l' + RefLibrary.extract_name(lib))
+        inc_libs = asp.key_as_strlist('armgcc.linker.libraries.Libraries', '{}')
+        for ref_lib in ref_libs:
+            inc_libs.append(ref_lib.name)
+        inc_libs_group = ''
+        for inc_lib in inc_libs:
+            inc_libs_group += ' -l' + RefLibrary.extract_name(inc_lib)
+        lflags.append('-Wl,--start-group{} -Wl,--end-group'.format(inc_libs_group))
+        lflags += asp.key_as_strlist('armgcc.linker.libraries.LibrarySearchPaths', '-L"{}"')
         for lib in ref_libs:
-            inc_libs.append('-l' + lib.name)
-        lflags.append('-Wl,--start-group {} -Wl,--end-group'.format(' '.join(inc_libs)))
-        lflags += asp.key_as_str_array('armgcc.linker.libraries.LibrarySearchPaths', '-L"{}"')
-        for lib in ref_libs:
-            lflags.append('-L"{}"'.format(lib.path))
+            lflags.append('-L"../{}/{}"'.format(lib.path, config + config_postfix))
         # Optimization
         if asp.key_as_bool('armgcc.linker.optimization.GarbageCollectUnusedSections'):
             lflags.append('-Wl,--gc-sections')
@@ -218,15 +228,20 @@ def convert(toolchain, prj, config, output):
         # Memory Settings
         # Miscellaneous
         lflags.append(asp.key_as_str('armgcc.linker.miscellaneous.LinkerFlags', '{}'))
-        lflags += asp.key_as_str_array('armgcc.linker.miscellaneous.OtherOptions', '-Xlinker {}')
-        lflags += asp.key_as_str_array('armgcc.linker.miscellaneous.OtherObjects', '{}')
+        lflags += asp.key_as_strlist('armgcc.linker.miscellaneous.OtherOptions', '-Xlinker {}')
+        lflags += asp.key_as_strlist('armgcc.linker.miscellaneous.OtherObjects', '{}')
 
-    nw = ninja_syntax.Writer(open('build.ninja', 'w'), 120)
+    nw = ninja_syntax.Writer(open(os.path.join(config + config_postfix, 'build.ninja'), 'w'), 120)
 
     nw.variable('ninja_required_version', '1.3')
     nw.newline()
 
-    nw.variable('root', '..')
+    nw.variable('builddir', '.')
+    nw.variable('src', '$builddir/..')
+    nw.newline()
+
+    for ref_lib in ref_libs:
+        nw.comment('subninja $builddir/../{}/{}/build.ninja'.format(ref_lib.path, config + config_postfix))
     nw.newline()
 
     nw.variable('ccflags', ccflags)
@@ -253,10 +268,10 @@ def convert(toolchain, prj, config, output):
         filename, file_ext = os.path.splitext(src_file)
         filename = strip_updir(filename)
         if file_ext == '.c':
-            obj_files += nw.build(filename + '.o', 'cc', '$root/' + src_file)
+            obj_files += nw.build('$builddir/' + filename + '.o', 'cc', '$src/' + src_file)
         else:
             if file_ext == '.cpp':
-                obj_files += nw.build(filename + '.o', 'cxx', '$root/' + src_file)
+                obj_files += nw.build('$builddir/' + filename + '.o', 'cxx', '$src/' + src_file)
             # else:
                 # print('Skipping file {}'.format(src_file))
 
@@ -264,27 +279,35 @@ def convert(toolchain, prj, config, output):
     #
     linker_script = detect_linker_script(lflags)
     if linker_script:
-        print('linker_script =' + linker_script)
-        implicit_dep.append(linker_script)
+        print('linker_script = ' + linker_script)
+        implicit_dep.append('$src/' + linker_script)
     #
     for lib in ref_libs:
-        implicit_dep.append(lib.full_name())
+        implicit_dep.append('$builddir/../' + lib.full_name(config + config_postfix))
 
     if obj_files:
         nw.newline()
-        nw.build(output + '.elf', 'link', obj_files,
+        nw.build('$builddir/' + output + '.elf', 'link', obj_files,
                  implicit=implicit_dep)
         nw.newline()
 
-    nw.build('all', 'phony', output + '.elf')
-    nw.newline()
-
-    nw.default('all')
+    nw.default('$builddir/' + output + '.elf')
 
     nw.close()
 
 
 if __name__ == '__main__':
     toolchain_path = 'C:/Program Files (x86)/Atmel/Atmel Toolchain/ARM GCC/Native/4.8.1437/arm-gnu-toolchain/bin'
+    config_name = 'Debug'
+    add_flags = ['-mthumb', '-mcpu=cortex-m4']
+    add_defs = ['__SAM4S8C__']
+    del_defs = []
 
-    convert(toolchain_path, os.path.join('tests', 'Korsar3.cproj'), 'Debug', 'Korsar3')
+    convert(toolchain=toolchain_path,
+            prj=os.path.join('tests', 'Korsar3.cproj'),
+            config=config_name,
+            output='Korsar3',
+            flags=add_flags,
+            defs=add_defs,
+            undefs=del_defs,
+            config_postfix='')
