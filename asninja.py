@@ -1,3 +1,4 @@
+import sys
 import os
 from xml.etree import ElementTree
 import re
@@ -7,18 +8,41 @@ import ninja_syntax
 class AtmelStudioProject(object):
     NSMAP = {'msb': 'http://schemas.microsoft.com/developer/msbuild/2003'}
 
-    def __init__(self, file_name):
+    def __init__(self, file_name, output):
         self.prj = ElementTree.parse(file_name)
         self.config_group = None
+        self.is_cpp = None
+        self.is_lib = None
+        self.output_name = None
+        self.output_ext = None
+        self.toolchain_settings = None
+        self.ref_libs = None
+        self.detect(output)
+
+    def detect(self, output):
         if self.prj:
-            self.toolchain_settings = 'ArmGcc'
-            self.ref_libs = self.detect_ref_libs()
+            key = self.prj.find('.//msb:PropertyGroup/msb:Language', self.NSMAP)
+            self.is_cpp = key.text == 'CPP'
+            key = self.prj.find('.//msb:PropertyGroup/msb:OutputType', self.NSMAP)
+            self.is_lib = key.text == 'StaticLibrary'
+            key = self.prj.find('.//msb:PropertyGroup/msb:OutputFileName', self.NSMAP)
+            self.output_name = key.text.replace('$(MSBuildProjectName)', output)
+            key = self.prj.find('.//msb:PropertyGroup/msb:OutputFileExtension', self.NSMAP)
+            self.output_ext = key.text
+            if self.is_cpp:
+                self.toolchain_settings = 'ArmGccCpp'
+            else:
+                self.toolchain_settings = 'ArmGcc'
+            self.ref_libs = []
+            for node in self.prj.findall('.//msb:ItemGroup/msb:ProjectReference', self.NSMAP):
+                path, prj_name = os.path.split(node.attrib['Include'].replace('\\', '/'))
+                raw_name, __ = os.path.splitext(prj_name)
+                self.ref_libs.append(RefLibrary(path, raw_name))
 
-    def is_cpp(self):
-        return False
-
-    def is_lib(self):
-        return False
+    def output(self):
+        assert self.output_name is not None
+        assert self.output_ext
+        return self.output_name + self.output_ext
 
     def select_config(self, config_name):
         self.config_group = None
@@ -30,7 +54,7 @@ class AtmelStudioProject(object):
 
     def key_raw(self, name):
         assert self.config_group is not None
-        key_xpath = './/{0}:{1}/{0}:{2}'.format('msb', self.toolchain_settings, name)
+        key_xpath = './/msb:{}/msb:{}'.format(self.toolchain_settings, name)
         return self.config_group.find(key_xpath, self.NSMAP)
 
     def key_as_bool(self, name, default=False):
@@ -52,7 +76,7 @@ class AtmelStudioProject(object):
     def key_as_strlist(self, name, fmt):
         assert self.config_group is not None
         s = []
-        key_xpath = './/{0}:{1}/{0}:{2}/{0}:ListValues/{0}:Value'.format('msb', self.toolchain_settings, name)
+        key_xpath = './/msb:{}/msb:{}/msb:ListValues/msb:Value'.format(self.toolchain_settings, name)
         for key in self.config_group.findall(key_xpath, self.NSMAP):
             s.append(fmt.format(key.text))
         return s
@@ -63,7 +87,16 @@ class AtmelStudioProject(object):
             src_files.append(node.attrib['Include'].replace('\\', '/'))
         return src_files
 
-    def compiler_flags(self, compiler, defs, undefs):
+    @staticmethod
+    def strip_empty_symbols(symbols):
+        assert isinstance(symbols, list)
+        new_symbols = []
+        for symbol in symbols:
+            if len(symbol) != 0:
+                new_symbols.append(symbol)
+        return new_symbols
+
+    def compiler_flags(self, compiler, add_defs=None, del_defs=None, add_undefs=None):
         assert self.config_group is not None
         flags = []
         prefix = compiler + '.compiler.'
@@ -78,14 +111,25 @@ class AtmelStudioProject(object):
         if self.key_as_bool(prefix + 'general.PreprocessOnly'):
             flags.append('-E')
         # Symbols
-        inc_defs = ninja_syntax.as_list(defs)
+        if add_defs:
+            inc_defs = self.strip_empty_symbols(ninja_syntax.as_list(add_defs))
+        else:
+            inc_defs = []
         inc_defs += self.key_as_strlist(prefix + 'symbols.DefSymbols', '{}')
-        for undef in ninja_syntax.as_list(undefs):
+        for undef in ninja_syntax.as_list(del_defs):
             if inc_defs.count(undef) > 0:
                 assert inc_defs.count(undef) == 1
                 inc_defs.remove(undef)
         flags.extend('-D{}'.format(inc_def) for inc_def in inc_defs)
+        if add_undefs:
+            inc_undefs = self.strip_empty_symbols(ninja_syntax.as_list(add_undefs))
+        else:
+            inc_undefs = []
+        inc_undefs += self.key_as_strlist(prefix + 'preprocessor.UndefSymbols', '{}')
+        flags.extend('-U{}'.format(inc_undef) for inc_undef in inc_undefs)
         # Directories
+        # if self.key_as_bool(prefix + 'directories.DefaultIncludePath', True):
+        #     flags += []
         flags += self.key_as_strlist(prefix + 'directories.IncludePaths', '-I"{}"')
         # Optimization
         # Optimization Level: -O[0,1,2,3,s]
@@ -148,7 +192,8 @@ class AtmelStudioProject(object):
             flags.append('-ansi')
         return flags
 
-    def linker_flags(self, output, outdir):
+    def linker_flags(self, outdir):
+        assert self.config_group is not None
         flags = []
         prefix = self.toolchain_settings.lower() + '.linker.'
         # General
@@ -163,7 +208,7 @@ class AtmelStudioProject(object):
         if self.key_as_bool(prefix + 'general.NoSharedLibraries'):
             flags.append('-static')
         if self.key_as_bool(prefix + 'general.GenerateMAPFile', True):
-            flags.append('-Wl,-Map="' + output + '.map"')
+            flags.append('-Wl,-Map="' + self.output_name + '.map"')
         if self.key_as_bool(prefix + 'general.UseNewlibNano'):
             flags.append('--specs=nano.specs')
         # AdditionalSpecs: if you want it - read it from './/armgcc.linker.general.AdditionalSpecs'
@@ -194,13 +239,12 @@ class AtmelStudioProject(object):
         flags += self.key_as_strlist(prefix + 'miscellaneous.OtherObjects', '{}')
         return flags
 
-    def detect_ref_libs(self):
-        ref_libs = []
-        for node in self.prj.findall('.//msb:ItemGroup/msb:ProjectReference', self.NSMAP):
-            path, prj_name = os.path.split(node.attrib['Include'].replace('\\', '/'))
-            raw_name, __ = os.path.splitext(prj_name)
-            ref_libs.append(RefLibrary(path, raw_name))
-        return ref_libs
+    def archiver_flags(self):
+        assert self.config_group is not None
+        flags = []
+        prefix = self.toolchain_settings.lower() + '.archiver.'
+        flags.append(self.key_as_str(prefix + 'general.ArchiverFlags', '{}', '-r'))
+        return flags
 
 
 class RefLibrary(object):
@@ -255,16 +299,16 @@ def detect_linker_script(lflags):
     return linker_script
 
 
-def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=''):
-    cc = os.path.join(toolchain, 'arm-none-eabi-gcc.exe')
-    cxx = os.path.join(toolchain, 'arm-none-eabi-g++.exe')
+def convert(toolchain_path, as_prj, config, outpath, output, flags, add_defs, del_defs):
+    cc = os.path.join(toolchain_path, 'arm-none-eabi-gcc.exe')
+    cxx = os.path.join(toolchain_path, 'arm-none-eabi-g++.exe')
     link_cc = cc
     link_cxx = cxx
-    ar = os.path.join(toolchain, 'arm-none-eabi-ar.exe')
+    ar = os.path.join(toolchain_path, 'arm-none-eabi-ar.exe')
 
-    outdir = config + config_postfix
+    __, outdir = os.path.split(outpath)
 
-    asp = AtmelStudioProject(prj)
+    asp = AtmelStudioProject(as_prj, output)
 
     ccflags = [] + ninja_syntax.as_list(flags)
     cxxflags = [] + ninja_syntax.as_list(flags)
@@ -273,17 +317,19 @@ def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=
 
     if asp.select_config(config):
         # ARM/GNU C Compiler
-        ccflags += asp.compiler_flags('armgcc', defs, undefs)
+        ccflags += asp.compiler_flags('armgcc', add_defs, del_defs, [])
         # ARM/GNU C++ Compiler
-        if asp.is_cpp():
-            cxxflags += asp.compiler_flags('armgcccpp', defs, undefs)
-        # ARM/GNU Linker
-        if asp.is_lib():
-            arflags += ['-r']  # asp.archiver_flags(output, outdir)
+        if asp.is_cpp:
+            cxxflags += asp.compiler_flags('armgcccpp', add_defs, del_defs, [])
+        if asp.is_lib:
+            # ARM/GNU Archiver
+            arflags += asp.archiver_flags()
         else:
-            lflags += asp.linker_flags(output, outdir)
+            # ARM/GNU Linker
+            lflags += asp.linker_flags(outdir)
 
-    nw = ninja_syntax.Writer(open(os.path.join(outdir, 'build.ninja'), 'w'), 120)
+    os.makedirs(outpath, exist_ok=True)
+    nw = ninja_syntax.Writer(open(os.path.join(outpath, 'build.ninja'), 'w'), 120)
 
     nw.variable('ninja_required_version', '1.3')
     nw.newline()
@@ -292,13 +338,12 @@ def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=
     nw.variable('src', '$builddir/..')
     nw.newline()
 
-    for ref_lib in asp.ref_libs:
-        nw.comment('subninja $builddir/../{}/{}/build.ninja'.format(ref_lib.path, outdir))
-    nw.newline()
+    if asp.ref_libs:
+        for ref_lib in asp.ref_libs:
+            nw.comment('subninja $builddir/../{}/{}/build.ninja'.format(ref_lib.path, outdir))
+        nw.newline()
 
     nw.variable('ccflags', ccflags)
-    nw.newline()
-    nw.variable('lflags', lflags)
     nw.newline()
 
     nw.rule('cc',
@@ -308,20 +353,29 @@ def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=
             deps='gcc')
     nw.newline()
 
-    if asp.is_cpp():
+    if asp.is_cpp:
+        nw.variable('cxxflags', cxxflags)
+        nw.newline()
+
         nw.rule('cxx',
-                command=cxx + ' -c $ccflags -MD -MF $out.d -MT $out -o $out $in',
+                command=cxx + ' -c $cxxflags -MD -MF $out.d -MT $out -o $out $in',
                 description='cxx $out',
                 depfile='$out.d',
                 deps='gcc')
         nw.newline()
 
-    if asp.is_lib():
+    if asp.is_lib:
+        nw.variable('arflags', arflags)
+        nw.newline()
+
         nw.rule('ar',
-                command=ar + ' $arflags -o$out $in',
+                command=ar + ' $arflags -c -o $out $in',
                 description='ar $out')
     else:
-        if asp.is_cpp():
+        nw.variable('lflags', lflags)
+        nw.newline()
+
+        if asp.is_cpp:
             link = link_cxx
         else:
             link = link_cc
@@ -341,15 +395,16 @@ def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=
             obj_files += nw.build('$builddir/' + filename + '.o', 'cc', '$src/' + src_file)
         else:
             if file_ext == '.cpp':
-                assert not asp.is_cpp()
+                assert asp.is_cpp
                 obj_files += nw.build('$builddir/' + filename + '.o', 'cxx', '$src/' + src_file)
             # else:
                 # print('Skipping file {}'.format(src_file))
 
     if obj_files:
-        if asp.is_lib():
-            nw.newline()
-            nw.build('$builddir/' + output + '.a', 'ar', obj_files)
+        nw.newline()
+
+        if asp.is_lib:
+            def_target = nw.build('$builddir/' + asp.output(), 'ar', obj_files)
             nw.newline()
         else:
             implicit_dep = []
@@ -362,28 +417,42 @@ def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=
             for lib in asp.ref_libs:
                 implicit_dep.append('$builddir/../' + lib.full_name(outdir))
 
-            nw.newline()
-            nw.build('$builddir/' + output + '.elf', 'link', obj_files,
-                     implicit=implicit_dep)
+            def_target = nw.build('$builddir/' + asp.output(), 'link', obj_files,
+                                  implicit=implicit_dep)
             nw.newline()
 
-            nw.default('$builddir/' + output + '.elf')
+        nw.default(def_target)
 
     nw.close()
 
 
 if __name__ == '__main__':
-    toolchain_path = 'C:/Program Files (x86)/Atmel/Atmel Toolchain/ARM GCC/Native/4.8.1437/arm-gnu-toolchain/bin'
-    config_name = 'Debug'
-    add_flags = ['-mthumb', '-mcpu=cortex-m4']
-    add_defs = ['__SAM4S8C__']
-    del_defs = []
+    _toolchain_path = 'C:/Program Files (x86)/Atmel/Atmel Toolchain/ARM GCC/Native/4.8.1437/arm-gnu-toolchain/bin'
+    if len(sys.argv) > 1:
+        _as_prj = sys.argv[1]
+        _config = sys.argv[2]
+        _outpath = sys.argv[3]
+        _output = sys.argv[4]
+        _flags = sys.argv[5].split(' ')
+        if len(sys.argv) > 6:
+            _add_defs = sys.argv[6].split(' ')
+        else:
+            _add_defs = []
+        _del_defs = []
+    else:
+        _as_prj = os.path.join('tests', 'Korsar3.cproj')
+        _config = 'Debug'
+        _outpath = _config
+        _output = 'Korsar3'
+        _flags = ['-mthumb', '-mcpu=cortex-m4']
+        _add_defs = ['__SAM4S8C__']
+        _del_defs = []
 
-    convert(toolchain=toolchain_path,
-            prj=os.path.join('tests', 'Korsar3.cproj'),
-            config=config_name,
-            output='Korsar3',
-            flags=add_flags,
-            defs=add_defs,
-            undefs=del_defs,
-            config_postfix='')
+    convert(toolchain_path=_toolchain_path,
+            as_prj=_as_prj,
+            config=_config,
+            outpath=_outpath,
+            output=_output,
+            flags=_flags,
+            add_defs=_add_defs,
+            del_defs=_del_defs)
