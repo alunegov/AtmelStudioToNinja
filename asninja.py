@@ -55,10 +55,9 @@ class AtmelStudioProject(object):
     def ref_libs(self):
         ref_libs = []
         for node in self.prj.findall('.//msb:ItemGroup/msb:ProjectReference', self.NSMAP):
-            print(node.attrib['Include'].replace('\\', '/'))
-            #node.
-            os.path.split()
-            ref_libs.append(RefLibrary('', ''))
+            path, prj_name = os.path.split(node.attrib['Include'].replace('\\', '/'))
+            raw_name, __ = os.path.splitext(prj_name)
+            ref_libs.append(RefLibrary(path, raw_name))
         return ref_libs
 
 
@@ -125,14 +124,7 @@ def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=
     ccflags = [] + ninja_syntax.as_list(flags)
     lflags = [] + ninja_syntax.as_list(flags)
 
-    asp.ref_libs()
-    # ItemGroup/ProjectReference
-    ref_libs = [
-        RefLibrary('../Balancing', 'Balancing'),
-        RefLibrary('../Center', 'Center'),
-        RefLibrary('../HelpersInCppK3', 'HelpersInCppK3'),
-        RefLibrary('../_ext/RosMath/project/RosMath_Static_AS62', 'RosMath_Static')
-    ]
+    ref_libs = asp.ref_libs()
 
     if asp.select_config(config):
         # ARM/GNU C Compiler
