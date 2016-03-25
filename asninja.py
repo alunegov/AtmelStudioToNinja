@@ -105,8 +105,13 @@ def detect_linker_script(lflags):
     for lflag in lflags:
         pos = lflag.find('-T')
         if pos != -1:
-            # linker script in linker flags is relative to makefile (build dir)
-            return lflag[pos + 2 + 3:]
+            linker_script = lflag[pos + len('-T'):]
+            pos = linker_script.find(' ')
+            if pos != -1:
+                linker_script = linker_script[:pos]
+            # linker script in linker flags is relative to makefile (build dir) - striping '../'
+            linker_script = linker_script[3:]
+    return linker_script
 
 
 def convert(toolchain, prj, config, output, flags, defs, undefs, config_postfix=''):
