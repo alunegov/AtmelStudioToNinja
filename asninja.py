@@ -5,6 +5,91 @@ import re
 import ninja_syntax
 
 
+def reg_read(key):
+    s = 'C:\\Program Files (x86)\\Atmel\\Studio\\7.0\\toolchain\\arm\\arm-gnu-toolchain\\bin'
+    return s.replace('\\', '/')
+
+
+class Toolchain(object):
+    def toolchain(self):
+        pass
+
+    def cc(self):
+        pass
+
+    def cxx(self):
+        pass
+
+
+class AtmelStudioToolchain(Toolchain):
+    AS_REG = 'HKEY_CURRENT_USER\Software\Atmel\AtmelStudio'
+    AS_DIR_REG = AS_REG + '\{}_Config\InstallDir'
+    USER_TOOLCHAIN_REG = AS_REG + '\{}\ToolchainPackages\{}\{}\BasePath'
+    TOOLCHAIN_NAMES = ['ARMGCC', 'AVR32GCC', 'AVR8GCC']
+
+    def __init__(self, prj_version, name, flavour):
+        self.prj_version = prj_version
+        # self.name = name
+        self.name = 'ARMGCC'
+        self.flavour = flavour
+
+    @classmethod
+    def detect(cls, prj_version, name, flavour):
+        if prj_version == '6.2':
+            return AtmelStudio62Toolchain(prj_version, name, flavour)
+        else:
+            if prj_version == '7.0':
+                return AtmelStudio70Toolchain(prj_version, name, flavour)
+            else:
+                assert False, 'Unsupported project version'
+
+    def toolchain(self):
+        if self.flavour == 'Native':
+            as_dir = ''  # reg_read(self.AS_DIR_REG.format(self.prj_version)).replace('\\', '/')
+            path = as_dir + self.native_suffix()
+        else:
+            path = reg_read(self.USER_TOOLCHAIN_REG.format(self.prj_version, self.name, self.flavour))
+        return path
+
+    def native_suffix(self) -> str:
+        pass
+
+    def tool_prefix(self):
+        prefixes = ['arm-none-eabi-', 'avr32-', 'avr8-']
+        tool_type = self.TOOLCHAIN_NAMES.index(self.name)
+        return prefixes[tool_type]
+
+    def cc(self):
+        return self.toolchain() + '/' + self.tool_prefix() + 'gcc'
+
+    def cxx(self):
+        return self.toolchain() + '/' + self.tool_prefix() + 'g++'
+
+
+class AtmelStudio62Toolchain(AtmelStudioToolchain):
+    SUFFIXES = ['../Atmel Toolchain/ARM GCC/Native/4.8.1437/arm-gnu-toolchain/bin',
+                '../Atmel Toolchain/AVR32 GCC/Native/3.4.1067/avr32-gnu-toolchain/bin',
+                '../Atmel Toolchain/AVR8 GCC/Native/3.4.1061/avr8-gnu-toolchain/bin']
+
+    def native_suffix(self) -> str:
+        tool_type = self.TOOLCHAIN_NAMES.index(self.name)
+        return self.SUFFIXES[tool_type]
+
+
+class AtmelStudio70Toolchain(AtmelStudioToolchain):
+    SUFFIXES = ['toolchain/arm/arm-gnu-toolchain/bin',
+                'toolchain/avr32/avr32-gnu-toolchain/bin',
+                'toolchain/avr8/avr8-gnu-toolchain/bin']
+
+    def native_suffix(self) -> str:
+        tool_type = self.TOOLCHAIN_NAMES.index(self.name)
+        return self.SUFFIXES[tool_type]
+
+
+class ClangToolchain(Toolchain):
+    pass
+
+
 class AtmelStudioProject(object):
     NSMAP = {'msb': 'http://schemas.microsoft.com/developer/msbuild/2003'}
 
@@ -21,6 +106,8 @@ class AtmelStudioProject(object):
 
     def detect(self, output):
         if self.prj:
+            key = self.prj.find('.//msb:PropertyGroup/msb:SchemaVersion', self.NSMAP)
+            assert (key is not None) and (key.text == '2.0'), 'Unsupported project schema version'
             key = self.prj.find('.//msb:PropertyGroup/msb:Language', self.NSMAP)
             self.is_cpp = key.text == 'CPP'
             key = self.prj.find('.//msb:PropertyGroup/msb:OutputType', self.NSMAP)
@@ -43,6 +130,18 @@ class AtmelStudioProject(object):
         assert self.output_name is not None
         assert self.output_ext
         return self.output_name + self.output_ext
+
+    def toolchain(self):
+        key = self.prj.find('.//msb:PropertyGroup/msb:ProjectVersion', self.NSMAP)
+        prj_version = key.text
+        key = self.prj.find('.//msb:PropertyGroup/msb:ToolchainName', self.NSMAP)
+        toolchain_name = key.text
+        key = self.prj.find('.//msb:PropertyGroup/msb:ToolchainFlavour', self.NSMAP)
+        toolchain_flavour = key.text
+
+        ast = AtmelStudioToolchain.detect(prj_version, toolchain_name, toolchain_flavour)
+
+        return ast.toolchain()
 
     def select_config(self, config_name):
         self.config_group = None
@@ -397,7 +496,7 @@ def convert(toolchain_path, as_prj, config, outpath, output, flags, add_defs, de
             if file_ext == '.cpp':
                 assert asp.is_cpp
                 obj_files += nw.build('$builddir/' + filename + '.o', 'cxx', '$src/' + src_file)
-            # else:
+                # else:
                 # print('Skipping file {}'.format(src_file))
 
     if obj_files:

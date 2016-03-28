@@ -3,6 +3,32 @@ import unittest
 import asninja
 
 
+class TestAtmelStudio62ToolChain(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_toolchain(self):
+        ast = asninja.AtmelStudio62Toolchain('6.2', 'com.Atmel.ARMGCC.C', 'Native')
+        self.assertEquals('../Atmel Toolchain/ARM GCC/Native/4.8.1437/arm-gnu-toolchain/bin',
+                          ast.toolchain())
+
+        ast = asninja.AtmelStudio62Toolchain('6.2', 'com.Atmel.ARMGCC.C', 'AS7')
+        self.assertEquals('C:/Program Files (x86)/Atmel/Studio/7.0/toolchain/arm/arm-gnu-toolchain/bin',
+                          ast.toolchain())
+
+    def test_cc(self):
+        ast = asninja.AtmelStudio62Toolchain('6.2', 'com.Atmel.ARMGCC.C', 'Native')
+        self.assertTrue('gcc' in ast.cc())
+
+    def test_cxx(self):
+        ast = asninja.AtmelStudio62Toolchain('6.2', 'com.Atmel.ARMGCC.C', 'Native')
+        self.assertTrue('g++' in ast.cxx())
+
+
 class TestAtmelStudioProject(unittest.TestCase):
 
     def setUp(self):
@@ -24,6 +50,9 @@ class TestAtmelStudioProject(unittest.TestCase):
 
     def test_output(self):
         self.assertEquals('Korsar3.elf', self.asp.output())
+
+    def test_toolchain(self):
+        self.assertIsNotNone(self.asp.toolchain())
 
     def test_select_config(self):
         self.assertTrue(self.asp.select_config('Debug'))
