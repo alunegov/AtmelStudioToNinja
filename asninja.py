@@ -5,11 +5,6 @@ import re
 import ninja_syntax
 
 
-def reg_read(key):
-    s = 'C:\\Program Files (x86)\\Atmel\\Studio\\7.0\\toolchain\\arm\\arm-gnu-toolchain\\bin'
-    return s.replace('\\', '/')
-
-
 class Toolchain(object):
     def toolchain(self):
         pass
@@ -20,17 +15,23 @@ class Toolchain(object):
     def cxx(self):
         pass
 
+    def ar(self):
+        pass
+
 
 class AtmelStudioToolchain(Toolchain):
-    AS_REG = 'HKEY_CURRENT_USER\Software\Atmel\AtmelStudio'
-    AS_DIR_REG = AS_REG + '\{}_Config\InstallDir'
-    USER_TOOLCHAIN_REG = AS_REG + '\{}\ToolchainPackages\{}\{}\BasePath'
+    AS_REG = 'Software\Atmel\AtmelStudio'
+    AS_DIR_REG = AS_REG + '\{}_Config'
+    USER_TOOLCHAIN_REG = AS_REG + '\{}\ToolchainPackages\{}\{}'
     TOOLCHAIN_NAMES = ['ARMGCC', 'AVR32GCC', 'AVR8GCC']
 
     def __init__(self, prj_version, name, flavour):
         self.prj_version = prj_version
-        # self.name = name
-        self.name = 'ARMGCC'
+        self.name = name
+        for index, item in enumerate(self.TOOLCHAIN_NAMES):
+            if item in name:
+                self.tool_type = index
+        assert self.tool_type is not None, 'Unsupported toolchain name'
         self.flavour = flavour
 
     @classmethod
@@ -43,27 +44,41 @@ class AtmelStudioToolchain(Toolchain):
             else:
                 assert False, 'Unsupported project version'
 
-    def toolchain(self):
+    def path(self):
         if self.flavour == 'Native':
-            as_dir = ''  # reg_read(self.AS_DIR_REG.format(self.prj_version)).replace('\\', '/')
-            path = as_dir + self.native_suffix()
+            reg_key_name = self.AS_DIR_REG.format(self.prj_version)
+            as_dir = self.read_reg(reg_key_name, 'InstallDir')
+            path = as_dir.replace('\\', '/') + '/' + self.native_suffix()
         else:
-            path = reg_read(self.USER_TOOLCHAIN_REG.format(self.prj_version, self.name, self.flavour))
+            reg_key_name = self.USER_TOOLCHAIN_REG.format(self.prj_version, self.name, self.flavour)
+            path = self.read_reg(reg_key_name, 'BasePath')
         return path
+
+    @classmethod
+    def read_reg(cls, key_name, value_name):
+        import winreg
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_name) as key:
+                value, __ = winreg.QueryValueEx(key, value_name)
+        except WindowsError:
+            value = ''
+        return value.replace('\\', '/')
 
     def native_suffix(self) -> str:
         pass
 
     def tool_prefix(self):
         prefixes = ['arm-none-eabi-', 'avr32-', 'avr8-']
-        tool_type = self.TOOLCHAIN_NAMES.index(self.name)
-        return prefixes[tool_type]
+        return prefixes[self.tool_type]
 
     def cc(self):
-        return self.toolchain() + '/' + self.tool_prefix() + 'gcc'
+        return self.path() + '/' + self.tool_prefix() + 'gcc'
 
     def cxx(self):
-        return self.toolchain() + '/' + self.tool_prefix() + 'g++'
+        return self.path() + '/' + self.tool_prefix() + 'g++'
+
+    def ar(self):
+        return self.path() + '/' + self.tool_prefix() + 'ar'
 
 
 class AtmelStudio62Toolchain(AtmelStudioToolchain):
@@ -72,18 +87,15 @@ class AtmelStudio62Toolchain(AtmelStudioToolchain):
                 '../Atmel Toolchain/AVR8 GCC/Native/3.4.1061/avr8-gnu-toolchain/bin']
 
     def native_suffix(self) -> str:
-        tool_type = self.TOOLCHAIN_NAMES.index(self.name)
-        return self.SUFFIXES[tool_type]
+        return self.SUFFIXES[self.tool_type]
 
 
 class AtmelStudio70Toolchain(AtmelStudioToolchain):
-    SUFFIXES = ['toolchain/arm/arm-gnu-toolchain/bin',
-                'toolchain/avr32/avr32-gnu-toolchain/bin',
+    SUFFIXES = ['toolchain/arm/arm-gnu-toolchain/bin', 'toolchain/avr32/avr32-gnu-toolchain/bin',
                 'toolchain/avr8/avr8-gnu-toolchain/bin']
 
     def native_suffix(self) -> str:
-        tool_type = self.TOOLCHAIN_NAMES.index(self.name)
-        return self.SUFFIXES[tool_type]
+        return self.SUFFIXES[self.tool_type]
 
 
 class ClangToolchain(Toolchain):
@@ -139,9 +151,7 @@ class AtmelStudioProject(object):
         key = self.prj.find('.//msb:PropertyGroup/msb:ToolchainFlavour', self.NSMAP)
         toolchain_flavour = key.text
 
-        ast = AtmelStudioToolchain.detect(prj_version, toolchain_name, toolchain_flavour)
-
-        return ast.toolchain()
+        return AtmelStudioToolchain.detect(prj_version, toolchain_name, toolchain_flavour)
 
     def select_config(self, config_name):
         self.config_group = None
@@ -398,16 +408,17 @@ def detect_linker_script(lflags):
     return linker_script
 
 
-def convert(toolchain_path, as_prj, config, outpath, output, flags, add_defs, del_defs):
-    cc = os.path.join(toolchain_path, 'arm-none-eabi-gcc.exe')
-    cxx = os.path.join(toolchain_path, 'arm-none-eabi-g++.exe')
-    link_cc = cc
-    link_cxx = cxx
-    ar = os.path.join(toolchain_path, 'arm-none-eabi-ar.exe')
-
+def convert(as_prj, config, outpath, output, flags, add_defs, del_defs):
     __, outdir = os.path.split(outpath)
 
     asp = AtmelStudioProject(as_prj, output)
+
+    toolchain = asp.toolchain()
+    cc = os.path.join(toolchain.path(), 'arm-none-eabi-gcc.exe')
+    cxx = os.path.join(toolchain.path(), 'arm-none-eabi-g++.exe')
+    link_cc = cc
+    link_cxx = cxx
+    ar = os.path.join(toolchain.path(), 'arm-none-eabi-ar.exe')
 
     ccflags = [] + ninja_syntax.as_list(flags)
     cxxflags = [] + ninja_syntax.as_list(flags)
@@ -526,7 +537,6 @@ def convert(toolchain_path, as_prj, config, outpath, output, flags, add_defs, de
 
 
 if __name__ == '__main__':
-    _toolchain_path = 'C:/Program Files (x86)/Atmel/Atmel Toolchain/ARM GCC/Native/4.8.1437/arm-gnu-toolchain/bin'
     if len(sys.argv) > 1:
         _as_prj = sys.argv[1]
         _config = sys.argv[2]
@@ -547,8 +557,7 @@ if __name__ == '__main__':
         _add_defs = ['__SAM4S8C__']
         _del_defs = []
 
-    convert(toolchain_path=_toolchain_path,
-            as_prj=_as_prj,
+    convert(as_prj=_as_prj,
             config=_config,
             outpath=_outpath,
             output=_output,

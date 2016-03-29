@@ -13,12 +13,12 @@ class TestAtmelStudio62ToolChain(unittest.TestCase):
 
     def test_toolchain(self):
         ast = asninja.AtmelStudio62Toolchain('6.2', 'com.Atmel.ARMGCC.C', 'Native')
-        self.assertEquals('../Atmel Toolchain/ARM GCC/Native/4.8.1437/arm-gnu-toolchain/bin',
-                          ast.toolchain())
+        self.assertEquals('C:/Program Files (x86)/Atmel/Atmel Studio 6.2/../Atmel Toolchain/ARM GCC/Native/4.8.1437/arm-gnu-toolchain/bin',
+                          ast.path())
 
         ast = asninja.AtmelStudio62Toolchain('6.2', 'com.Atmel.ARMGCC.C', 'AS7')
         self.assertEquals('C:/Program Files (x86)/Atmel/Studio/7.0/toolchain/arm/arm-gnu-toolchain/bin',
-                          ast.toolchain())
+                          ast.path())
 
     def test_cc(self):
         ast = asninja.AtmelStudio62Toolchain('6.2', 'com.Atmel.ARMGCC.C', 'Native')
