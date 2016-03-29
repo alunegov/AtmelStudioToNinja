@@ -38,8 +38,7 @@ class AtmelStudioToolchain(Toolchain):
     def detect(cls, prj_version, name, flavour):
         if prj_version == '6.2':
             return AtmelStudio62Toolchain(prj_version, name, flavour)
-        else:
-            if prj_version == '7.0':
+        elif prj_version == '7.0':
             return AtmelStudio70Toolchain(prj_version, name, flavour)
         else:
             assert False, 'Unsupported project version'
@@ -503,8 +502,7 @@ def convert(as_prj, config, outpath, output, flags, add_defs, del_defs):
         filename = strip_updir(filename)
         if file_ext == '.c':
             obj_files += nw.build('$builddir/' + filename + '.o', 'cc', '$src/' + src_file)
-        else:
-            if file_ext == '.cpp':
+        elif file_ext == '.cpp':
             assert asp.is_cpp
             obj_files += nw.build('$builddir/' + filename + '.o', 'cxx', '$src/' + src_file)
         # else:
