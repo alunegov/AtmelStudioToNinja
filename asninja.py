@@ -545,7 +545,7 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=str, help='Output filename')
     parser.add_argument('--flags', type=str, help='Additional compiler and linker flags (like -mthumb)', default=None)
     parser.add_argument('--add_defs', type=str, help='Additional compiler defines (like __SAM4S8C__)', default=None)
-    parser.add_argument('--del_defs', type=str, help='Additional compiler undefines', default=None)
+    parser.add_argument('--del_defs', type=str, help='Defines to remove from compiler defines', default=None)
     # parser.add_argument('--toolchain', type=str, help='GCC toolchain path', default=None)
 
     # get all data from command line
