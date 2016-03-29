@@ -4,100 +4,116 @@ import re
 import ninja_syntax
 
 
-class Toolchain(object):
-    def toolchain(self):
-        pass
-
-    def cc(self):
-        pass
-
-    def cxx(self):
-        pass
-
-    def ar(self):
-        pass
-
-
-class AtmelStudioToolchain(Toolchain):
-    AS_REG = 'Software\Atmel\AtmelStudio'
-    AS_DIR_REG = AS_REG + '\{}_Config'
-    USER_TOOLCHAIN_REG = AS_REG + '\{}\ToolchainPackages\{}\{}'
-    TOOLCHAIN_NAMES = ['ARMGCC', 'AVR32GCC', 'AVR8GCC']
-
-    def __init__(self, prj_version, name, flavour):
-        self.prj_version = prj_version
-        self.name = name
-        for index, item in enumerate(self.TOOLCHAIN_NAMES):
-            if item in name:
-                self.tool_type = index
-        assert self.tool_type is not None, 'Unsupported toolchain name'
-        self.flavour = flavour
+class GccToolchain(object):
+    def __init__(self, path, tool_type=None):
+        self.path = path
+        self.tool_type = tool_type if tool_type else self.tool_type(path)
 
     @classmethod
-    def detect(cls, prj_version, name, flavour):
-        if prj_version == '6.2':
-            return AtmelStudio62Toolchain(prj_version, name, flavour)
-        elif prj_version == '7.0':
-            return AtmelStudio70Toolchain(prj_version, name, flavour)
+    def tool_type(cls, path) -> str:
+        if 'arm-' in path:
+            tool_type = 'arm'
+        elif 'avr32-' in path:
+            tool_type = 'avr32'
+        elif 'avr8-' in path:
+            tool_type = 'avr8'
         else:
-            assert False, 'Unsupported project version'
+            raise Exception('Unsupported toolchain {0}'.format(path))
+        return tool_type
 
-    def path(self):
-        if self.flavour == 'Native':
-            reg_key_name = self.AS_DIR_REG.format(self.prj_version)
-            as_dir = self.read_reg(reg_key_name, 'InstallDir')
-            path = as_dir.replace('\\', '/') + '/' + self.native_suffix()
+    def tool_prefix(self) -> str:
+        prefixes = {'arm': 'arm-none-eabi',
+                    'avr32': 'avr32',
+                    'avr8': 'avr8'}
+        return prefixes[self.tool_type]
+
+    def ar(self) -> str:
+        tool = self.tool_prefix() + '-ar'
+        return os.path.join(self.path, tool)
+
+    def cc(self) -> str:
+        tool = self.tool_prefix() + '-gcc'
+        return os.path.join(self.path, tool)
+
+    def cxx(self) -> str:
+        tool = self.tool_prefix() + '-g++'
+        return os.path.join(self.path, tool)
+
+    def objdump(self) -> str:
+        tool = self.tool_prefix() + '-objdump'
+        return os.path.join(self.path, tool)
+
+    def size(self) -> str:
+        tool = self.tool_prefix() + '-size'
+        return os.path.join(self.path, tool)
+
+
+class AtmelStudioGccToolchain(GccToolchain):
+    def __init__(self, path):
+        super().__init__(path)
+
+    @classmethod
+    def from_project(cls, asp):
+        as62_suffixes = {'arm': '..\\Atmel Toolchain\\ARM GCC\\Native\\4.8.1437\\arm-gnu-toolchain\\bin',
+                         'avr32': '..\\Atmel Toolchain\\AVR32 GCC\\Native\\3.4.1067\\avr32-gnu-toolchain\\bin',
+                         'avr8': '..\\Atmel Toolchain\\AVR8 GCC\\Native\\3.4.1061\\avr8-gnu-toolchain\\bin'}
+        as70_suffixes = {'arm': 'toolchain\\arm\\arm-gnu-toolchain\\bin',
+                         'avr32': 'toolchain\\avr32\\avr32-gnu-toolchain\\bin',
+                         'avr8': 'toolchain\\avr8\\avr8-gnu-toolchain\\bin'}
+
+        assert asp
+        prj_version, name, flavour = asp.toolchain_id()
+
+        if flavour == 'Native':
+            if 'ARMGCC' in name:
+                tool_type = 'arm'
+            elif 'AVR32GCC' in name:
+                tool_type = 'avr32'
+            elif 'AVR8GCC' in name:
+                tool_type = 'avr8'
+            else:
+                exc_text = 'Unsupported Native toolchain name {0}.'.format(name)
+                exc_text += ' You can set toolchain explicitly with --gcc_toolchain'
+                raise Exception(exc_text)
+
+            if prj_version == '6.2':
+                suffix = as62_suffixes[tool_type]
+            elif prj_version == '7.0':
+                suffix = as70_suffixes[tool_type]
+            else:
+                exc_text = 'Unsupported project version {0}.'.format(prj_version)
+                exc_text += ' You can set toolchain explicitly with --gcc_toolchain'
+                raise Exception(exc_text)
+
+            reg_key_name = 'Software\\Atmel\\AtmelStudio\\{}_Config'.format(prj_version)
+            as_dir = cls.read_reg(reg_key_name, 'InstallDir')
+            if len(as_dir) == 0:
+                exc_text = 'Path to Atmel Studio not detected.'
+                exc_text += ' You can set toolchain explicitly with --gcc_toolchain'
+                raise Exception(exc_text)
+
+            path = os.path.join(as_dir, suffix)
         else:
-            reg_key_name = self.USER_TOOLCHAIN_REG.format(self.prj_version, self.name, self.flavour)
-            path = self.read_reg(reg_key_name, 'BasePath')
-        return path
+            reg_key_name = 'Software\\Atmel\\AtmelStudio\\{}\\ToolchainPackages\\{}\\{}'.format(prj_version, name,
+                                                                                                flavour)
+            path = cls.read_reg(reg_key_name, 'BasePath')
+            if len(path) == 0:
+                exc_text = 'Path to non-native toolchain flavour not detected.'
+                exc_text += ' You can set toolchain explicitly with --gcc_toolchain'
+                raise Exception(exc_text)
+
+        return AtmelStudioGccToolchain(path)
 
     @classmethod
     def read_reg(cls, key_name, value_name):
         import winreg
+
         try:
             with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_name) as key:
                 value, __ = winreg.QueryValueEx(key, value_name)
         except WindowsError:
             value = ''
-        return value.replace('\\', '/')
-
-    def native_suffix(self) -> str:
-        pass
-
-    def tool_prefix(self):
-        prefixes = ['arm-none-eabi-', 'avr32-', 'avr8-']
-        return prefixes[self.tool_type]
-
-    def cc(self):
-        return self.path() + '/' + self.tool_prefix() + 'gcc'
-
-    def cxx(self):
-        return self.path() + '/' + self.tool_prefix() + 'g++'
-
-    def ar(self):
-        return self.path() + '/' + self.tool_prefix() + 'ar'
-
-
-class AtmelStudio62Toolchain(AtmelStudioToolchain):
-    SUFFIXES = ['../Atmel Toolchain/ARM GCC/Native/4.8.1437/arm-gnu-toolchain/bin',
-                '../Atmel Toolchain/AVR32 GCC/Native/3.4.1067/avr32-gnu-toolchain/bin',
-                '../Atmel Toolchain/AVR8 GCC/Native/3.4.1061/avr8-gnu-toolchain/bin']
-
-    def native_suffix(self) -> str:
-        return self.SUFFIXES[self.tool_type]
-
-
-class AtmelStudio70Toolchain(AtmelStudioToolchain):
-    SUFFIXES = ['toolchain/arm/arm-gnu-toolchain/bin', 'toolchain/avr32/avr32-gnu-toolchain/bin',
-                'toolchain/avr8/avr8-gnu-toolchain/bin']
-
-    def native_suffix(self) -> str:
-        return self.SUFFIXES[self.tool_type]
-
-
-class ClangToolchain(Toolchain):
-    pass
+        return value
 
 
 class AtmelStudioProject(object):
@@ -115,33 +131,34 @@ class AtmelStudioProject(object):
         self.detect(output)
 
     def detect(self, output):
-        if self.prj:
-            key = self.prj.find('.//msb:PropertyGroup/msb:SchemaVersion', self.NSMAP)
-            assert (key is not None) and (key.text == '2.0'), 'Unsupported project schema version'
-            key = self.prj.find('.//msb:PropertyGroup/msb:Language', self.NSMAP)
-            self.is_cpp = key.text == 'CPP'
-            key = self.prj.find('.//msb:PropertyGroup/msb:OutputType', self.NSMAP)
-            self.is_lib = key.text == 'StaticLibrary'
-            key = self.prj.find('.//msb:PropertyGroup/msb:OutputFileName', self.NSMAP)
-            self.output_name = key.text.replace('$(MSBuildProjectName)', output)
-            key = self.prj.find('.//msb:PropertyGroup/msb:OutputFileExtension', self.NSMAP)
-            self.output_ext = key.text
-            if self.is_cpp:
-                self.toolchain_settings = 'ArmGccCpp'
-            else:
-                self.toolchain_settings = 'ArmGcc'
-            self.ref_libs = []
-            for node in self.prj.findall('.//msb:ItemGroup/msb:ProjectReference', self.NSMAP):
-                path, prj_name = os.path.split(node.attrib['Include'].replace('\\', '/'))
-                raw_name, __ = os.path.splitext(prj_name)
-                self.ref_libs.append(RefLibrary(path, raw_name))
+        if not self.prj:
+            pass
+        key = self.prj.find('.//msb:PropertyGroup/msb:SchemaVersion', self.NSMAP)
+        assert (key is not None) and (key.text == '2.0'), 'Unsupported project schema version'
+        key = self.prj.find('.//msb:PropertyGroup/msb:Language', self.NSMAP)
+        self.is_cpp = key.text == 'CPP'
+        key = self.prj.find('.//msb:PropertyGroup/msb:OutputType', self.NSMAP)
+        self.is_lib = key.text == 'StaticLibrary'
+        key = self.prj.find('.//msb:PropertyGroup/msb:OutputFileName', self.NSMAP)
+        self.output_name = key.text.replace('$(MSBuildProjectName)', output)
+        key = self.prj.find('.//msb:PropertyGroup/msb:OutputFileExtension', self.NSMAP)
+        self.output_ext = key.text
+        if self.is_cpp:
+            self.toolchain_settings = 'ArmGccCpp'
+        else:
+            self.toolchain_settings = 'ArmGcc'
+        self.ref_libs = []
+        for node in self.prj.findall('.//msb:ItemGroup/msb:ProjectReference', self.NSMAP):
+            path, prj_name = os.path.split(node.attrib['Include'])
+            raw_name, __ = os.path.splitext(prj_name)
+            self.ref_libs.append(RefLibrary(path.replace('\\', '/'), raw_name))
 
     def output(self):
         assert self.output_name is not None
         assert self.output_ext
         return self.output_name + self.output_ext
 
-    def toolchain(self):
+    def toolchain_id(self):
         key = self.prj.find('.//msb:PropertyGroup/msb:ProjectVersion', self.NSMAP)
         prj_version = key.text
         key = self.prj.find('.//msb:PropertyGroup/msb:ToolchainName', self.NSMAP)
@@ -149,7 +166,7 @@ class AtmelStudioProject(object):
         key = self.prj.find('.//msb:PropertyGroup/msb:ToolchainFlavour', self.NSMAP)
         toolchain_flavour = key.text
 
-        return AtmelStudioToolchain.detect(prj_version, toolchain_name, toolchain_flavour)
+        return prj_version, toolchain_name, toolchain_flavour
 
     def select_config(self, config_name):
         self.config_group = None
@@ -406,22 +423,25 @@ def detect_linker_script(lflags):
     return linker_script
 
 
-def convert(as_prj, config, outpath, output, flags, add_defs, del_defs):
-    __, outdir = os.path.split(outpath)
-
+def convert(as_prj, config, outpath, output, flags, add_defs, del_defs, custom_toolchain=None):
     asp = AtmelStudioProject(as_prj, output)
 
-    toolchain = asp.toolchain()
-    cc = os.path.join(toolchain.path(), 'arm-none-eabi-gcc.exe')
-    cxx = os.path.join(toolchain.path(), 'arm-none-eabi-g++.exe')
+    if custom_toolchain:
+        toolchain = GccToolchain(custom_toolchain)
+    else:
+        toolchain = AtmelStudioGccToolchain.from_project(asp)
+    cc = toolchain.cc()
+    cxx = toolchain.cxx()
     link_cc = cc
     link_cxx = cxx
-    ar = os.path.join(toolchain.path(), 'arm-none-eabi-ar.exe')
+    ar = toolchain.ar()
 
     ccflags = [] + ninja_syntax.as_list(flags)
     cxxflags = [] + ninja_syntax.as_list(flags)
     lflags = [] + ninja_syntax.as_list(flags)
     arflags = []
+
+    __, outdir = os.path.split(outpath)
 
     if asp.select_config(config):
         # ARM/GNU C Compiler
@@ -483,10 +503,7 @@ def convert(as_prj, config, outpath, output, flags, add_defs, del_defs):
         nw.variable('lflags', lflags)
         nw.newline()
 
-        if asp.is_cpp:
-            link = link_cxx
-        else:
-            link = link_cc
+        link = link_cxx if asp.is_cpp else link_cc
 
         nw.rule('link',
                 command=link + ' -o $out @$out.rsp $lflags',
@@ -499,11 +516,12 @@ def convert(as_prj, config, outpath, output, flags, add_defs, del_defs):
     for src_file in asp.src_files():
         filename, file_ext = os.path.splitext(src_file)
         filename = strip_updir(filename)
+        filename = '$builddir/' + filename + '.o'
         if file_ext == '.c':
-            obj_files += nw.build('$builddir/' + filename + '.o', 'cc', '$src/' + src_file)
+            obj_files += nw.build(filename, 'cc', '$src/' + src_file)
         elif file_ext == '.cpp':
             assert asp.is_cpp
-            obj_files += nw.build('$builddir/' + filename + '.o', 'cxx', '$src/' + src_file)
+            obj_files += nw.build(filename, 'cxx', '$src/' + src_file)
         # else:
         #     print('Skipping file {}'.format(src_file))
 
@@ -545,7 +563,7 @@ if __name__ == '__main__':
     parser.add_argument('--flags', type=str, help='Additional compiler and linker flags (like -mthumb)', default=None)
     parser.add_argument('--add_defs', type=str, help='Additional compiler defines (like __SAM4S8C__)', default=None)
     parser.add_argument('--del_defs', type=str, help='Defines to remove from compiler defines', default=None)
-    # parser.add_argument('--toolchain', type=str, help='GCC toolchain path', default=None)
+    parser.add_argument('--gcc_toolchain', type=str, help='Custom GCC toolchain path', default=None)
 
     # get all data from command line
     args = parser.parse_args()
@@ -558,4 +576,4 @@ if __name__ == '__main__':
     # print(_flags, _add_defs, _del_defs)
 
     convert(as_prj=args.prj, config=args.config, outpath=_outpath, output=args.output, flags=_flags,
-            add_defs=_add_defs, del_defs=_del_defs)
+            add_defs=_add_defs, del_defs=_del_defs, custom_toolchain=args.gcc_toolchain)

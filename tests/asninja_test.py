@@ -3,35 +3,64 @@ import unittest
 import asninja
 
 
-class TestAtmelStudio62ToolChain(unittest.TestCase):
+class TestGccToolchain(unittest.TestCase):
+    def test_constructor(self):
+        tc = asninja.GccToolchain('arm-')
+        self.assertEquals('arm-', tc.path)
+        self.assertEquals('arm', tc.tool_type)
 
-    def setUp(self):
-        pass
+        tc = asninja.GccToolchain('TestPath', 'TestToolType')
+        self.assertEquals('TestPath', tc.path)
+        self.assertEquals('TestToolType', tc.tool_type)
 
-    def tearDown(self):
-        pass
+        # self.assertRaises(Exception, asninja.GccToolchain('PathWithoutToolchainMarker'))
 
-    def test_toolchain(self):
-        ast = asninja.AtmelStudio62Toolchain('6.2', 'com.Atmel.ARMGCC.C', 'Native')
-        self.assertEquals('C:/Program Files (x86)/Atmel/Atmel Studio 6.2/../Atmel Toolchain/ARM GCC/Native/4.8.1437/'
-                          'arm-gnu-toolchain/bin',
-                          ast.path())
+    def test_tool_type(self):
+        self.assertEquals('arm', asninja.GccToolchain.tool_type('arm-'))
+        self.assertEquals('avr32', asninja.GccToolchain.tool_type('avr32-'))
+        self.assertEquals('avr8', asninja.GccToolchain.tool_type('avr8-'))
+        # self.assertRaises(Exception, asninja.GccToolchain.tool_type('PathWithoutToolchainMarker'))
 
-        ast = asninja.AtmelStudio62Toolchain('6.2', 'com.Atmel.ARMGCC.C', 'AS7')
-        self.assertEquals('C:/Program Files (x86)/Atmel/Studio/7.0/toolchain/arm/arm-gnu-toolchain/bin',
-                          ast.path())
+    def test_tool_prefix(self):
+        tc = asninja.GccToolchain('', 'arm')
+        self.assertEquals('arm-none-eabi', tc.tool_prefix())
+        tc = asninja.GccToolchain('', 'avr32')
+        self.assertEquals('avr32', tc.tool_prefix())
+        tc = asninja.GccToolchain('', 'avr8')
+        self.assertEquals('avr8', tc.tool_prefix())
+
+    def test_ar(self):
+        tc = asninja.GccToolchain('arm-')
+        self.assertTrue('ar' in tc.ar())
 
     def test_cc(self):
-        ast = asninja.AtmelStudio62Toolchain('6.2', 'com.Atmel.ARMGCC.C', 'Native')
-        self.assertTrue('gcc' in ast.cc())
+        tc = asninja.GccToolchain('arm-')
+        self.assertTrue('gcc' in tc.cc())
 
     def test_cxx(self):
-        ast = asninja.AtmelStudio62Toolchain('6.2', 'com.Atmel.ARMGCC.C', 'Native')
-        self.assertTrue('g++' in ast.cxx())
+        tc = asninja.GccToolchain('arm-')
+        self.assertTrue('g++' in tc.cxx())
+
+
+class TestAtmelStudioGccToolchain(unittest.TestCase):
+    def test_constructor(self):
+        tc = asninja.AtmelStudioGccToolchain('arm-')
+        self.assertEquals('arm-', tc.path)
+        self.assertEquals('arm', tc.tool_type)
+
+    def test_from_project(self):
+        asp = asninja.AtmelStudioProject('Korsar3.cproj', 'Korsar3')
+
+        tc = asninja.AtmelStudioGccToolchain.from_project(asp)
+        self.assertEquals('C:\\Program Files (x86)\\Atmel\\Atmel Studio 6.2\\..\\Atmel Toolchain\\ARM GCC\\Native\\'
+                          '4.8.1437\\arm-gnu-toolchain\\bin', tc.path)
+        self.assertEquals('arm', tc.tool_type)
+
+    def test_read_reg(self):
+        pass
 
 
 class TestAtmelStudioProject(unittest.TestCase):
-
     def setUp(self):
         self.asp = asninja.AtmelStudioProject('Korsar3.cproj', 'Korsar3')
 
@@ -53,7 +82,10 @@ class TestAtmelStudioProject(unittest.TestCase):
         self.assertEquals('Korsar3.elf', self.asp.output())
 
     def test_toolchain(self):
-        self.assertIsNotNone(self.asp.toolchain())
+        prj_version, name, flavour = self.asp.toolchain_id()
+        self.assertEquals('6.2', prj_version)
+        self.assertEquals('com.Atmel.ARMGCC.C', name)
+        self.assertEquals('Native', flavour)
 
     def test_select_config(self):
         self.assertTrue(self.asp.select_config('Debug'))
@@ -145,7 +177,6 @@ class TestAtmelStudioProject(unittest.TestCase):
 
 
 class TestRefLibrary(unittest.TestCase):
-
     def test_lib_name(self):
         reflib = asninja.RefLibrary('', 'Center')
 
@@ -165,7 +196,6 @@ class TestRefLibrary(unittest.TestCase):
 
 
 class TestFunctions(unittest.TestCase):
-
     def test_strip_updir(self):
         self.assertEquals('Path', asninja.strip_updir('Path'))
         self.assertEquals('Path', asninja.strip_updir('../Path'))
@@ -179,7 +209,6 @@ class TestFunctions(unittest.TestCase):
 
 
 class TestConvert(unittest.TestCase):
-
     def test_(self):
         pass
 
