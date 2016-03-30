@@ -11,7 +11,7 @@ class TestAtmelStudioGccToolchain(unittest.TestCase):
         self.assertEqual('arm-', tc.path)
         self.assertEqual('arm', tc.tool_type)
 
-    @unittest.expectedFailure
+    @unittest.skipUnless(sys.platform.startswith("win"), "requires Windows")
     def test_from_project(self):
         asp = AtmelStudioProject('Korsar3.cproj', 'Korsar3')
 
