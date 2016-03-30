@@ -15,21 +15,21 @@ class TestAtmelStudioProject(unittest.TestCase):
         self.assertIsNone(self.asp.config_group)
         self.assertFalse(self.asp.is_cpp)
         self.assertFalse(self.asp.is_lib)
-        self.assertEquals('Korsar3', self.asp.output_name)
-        self.assertEquals('.elf', self.asp.output_ext)
-        self.assertEquals('ArmGcc', self.asp.toolchain_settings)
+        self.assertEqual('Korsar3', self.asp.output_name)
+        self.assertEqual('.elf', self.asp.output_ext)
+        self.assertEqual('ArmGcc', self.asp.toolchain_settings)
         self.assertIsNotNone(self.asp.ref_libs)
         self.assertIsInstance(self.asp.ref_libs, list)
         self.assertLess(0, len(self.asp.ref_libs))
 
     def test_output(self):
-        self.assertEquals('Korsar3.elf', self.asp.output())
+        self.assertEqual('Korsar3.elf', self.asp.output())
 
     def test_toolchain(self):
         prj_version, name, flavour = self.asp.toolchain_id()
-        self.assertEquals('6.2', prj_version)
-        self.assertEquals('com.Atmel.ARMGCC.C', name)
-        self.assertEquals('Native', flavour)
+        self.assertEqual('6.2', prj_version)
+        self.assertEqual('com.Atmel.ARMGCC.C', name)
+        self.assertEqual('Native', flavour)
 
     def test_select_config(self):
         self.assertTrue(self.asp.select_config('Debug'))
@@ -58,9 +58,9 @@ class TestAtmelStudioProject(unittest.TestCase):
     def test_key_as_str(self):
         self.assertTrue(self.asp.select_config('Debug'))
 
-        self.assertEquals('bla-Maximum (-g3)',
+        self.assertEqual('bla-Maximum (-g3)',
                           self.asp.key_as_str('armgcc.compiler.optimization.DebugLevel', 'bla-{}', '',))
-        self.assertEquals('Dummy', self.asp.key_as_str('NonExists', 'bla-{}', 'Dummy',))
+        self.assertEqual('Dummy', self.asp.key_as_str('NonExists', 'bla-{}', 'Dummy',))
 
     def test_key_as_strlist(self):
         self.assertTrue(self.asp.select_config('Debug'))
@@ -75,7 +75,7 @@ class TestAtmelStudioProject(unittest.TestCase):
         keys = self.asp.key_as_strlist('NonExists', 'bla-{}')
         self.assertIsNotNone(keys)
         self.assertIsInstance(keys, list)
-        self.assertEquals(0, len(keys))
+        self.assertEqual(0, len(keys))
 
     def test_src_files(self):
         files = self.asp.src_files()
@@ -116,27 +116,27 @@ class TestAtmelStudioProject(unittest.TestCase):
         flags = self.asp.archiver_flags()
         self.assertIsNotNone(flags)
         self.assertIsInstance(flags, list)
-        self.assertEquals(1, len(flags))
-        self.assertEquals('-r', flags[0])
+        self.assertEqual(1, len(flags))
+        self.assertEqual('-r', flags[0])
 
 
 class TestRefLibrary(unittest.TestCase):
     def test_lib_name(self):
         reflib = RefLibrary('', 'Center')
 
-        self.assertEquals('libCenter', reflib.lib_name(False))
-        self.assertEquals('libCenter.a', reflib.lib_name(True))
+        self.assertEqual('libCenter', reflib.lib_name(False))
+        self.assertEqual('libCenter.a', reflib.lib_name(True))
 
     def test_full_name(self):
         reflib = RefLibrary('Path', 'Center')
 
-        self.assertEquals('Path/Debug/libCenter.a', reflib.full_name('Debug'))
+        self.assertEqual('Path/Debug/libCenter.a', reflib.full_name('Debug'))
 
     def test_extract_name(self):
-        self.assertEquals('Center', RefLibrary.extract_name('Center'))
-        self.assertEquals('Center', RefLibrary.extract_name('libCenter'))
-        self.assertEquals('Center', RefLibrary.extract_name('Center.a'))
-        self.assertEquals('Center', RefLibrary.extract_name('libCenter.a'))
+        self.assertEqual('Center', RefLibrary.extract_name('Center'))
+        self.assertEqual('Center', RefLibrary.extract_name('libCenter'))
+        self.assertEqual('Center', RefLibrary.extract_name('Center.a'))
+        self.assertEqual('Center', RefLibrary.extract_name('libCenter.a'))
 
 
 if __name__ == '__main__':
