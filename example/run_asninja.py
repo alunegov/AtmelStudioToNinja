@@ -1,7 +1,5 @@
 import argparse
 
-import ninja_syntax
-
 from asninja.converter import Converter
 
 
@@ -15,8 +13,6 @@ def main():
     parser.add_argument('--add_defs', type=str, help='Additional compiler defines (like __SAM4S8C__)', default=None)
     parser.add_argument('--del_defs', type=str, help='Defines to remove from compiler defines', default=None)
     parser.add_argument('--gcc_toolchain', type=str, help='Custom GCC toolchain path', default=None)
-
-    dd = ninja_syntax.as_list(None)
 
     # get all data from command line
     args = parser.parse_args()
