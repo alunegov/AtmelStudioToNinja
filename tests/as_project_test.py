@@ -1,68 +1,12 @@
 import os
 import unittest
-import asninja
 
-
-class TestGccToolchain(unittest.TestCase):
-    def test_constructor(self):
-        tc = asninja.GccToolchain('arm-')
-        self.assertEquals('arm-', tc.path)
-        self.assertEquals('arm', tc.tool_type)
-
-        tc = asninja.GccToolchain('TestPath', 'TestToolType')
-        self.assertEquals('TestPath', tc.path)
-        self.assertEquals('TestToolType', tc.tool_type)
-
-        # self.assertRaises(Exception, asninja.GccToolchain('PathWithoutToolchainMarker'))
-
-    def test_tool_type(self):
-        self.assertEquals('arm', asninja.GccToolchain.tool_type('arm-'))
-        self.assertEquals('avr32', asninja.GccToolchain.tool_type('avr32-'))
-        self.assertEquals('avr8', asninja.GccToolchain.tool_type('avr8-'))
-        # self.assertRaises(Exception, asninja.GccToolchain.tool_type('PathWithoutToolchainMarker'))
-
-    def test_tool_prefix(self):
-        tc = asninja.GccToolchain('', 'arm')
-        self.assertEquals('arm-none-eabi', tc.tool_prefix())
-        tc = asninja.GccToolchain('', 'avr32')
-        self.assertEquals('avr32', tc.tool_prefix())
-        tc = asninja.GccToolchain('', 'avr8')
-        self.assertEquals('avr8', tc.tool_prefix())
-
-    def test_ar(self):
-        tc = asninja.GccToolchain('arm-')
-        self.assertTrue('ar' in tc.ar())
-
-    def test_cc(self):
-        tc = asninja.GccToolchain('arm-')
-        self.assertTrue('gcc' in tc.cc())
-
-    def test_cxx(self):
-        tc = asninja.GccToolchain('arm-')
-        self.assertTrue('g++' in tc.cxx())
-
-
-class TestAtmelStudioGccToolchain(unittest.TestCase):
-    def test_constructor(self):
-        tc = asninja.AtmelStudioGccToolchain('arm-')
-        self.assertEquals('arm-', tc.path)
-        self.assertEquals('arm', tc.tool_type)
-
-    def test_from_project(self):
-        asp = asninja.AtmelStudioProject('Korsar3.cproj', 'Korsar3')
-
-        tc = asninja.AtmelStudioGccToolchain.from_project(asp)
-        self.assertEquals('C:\\Program Files (x86)\\Atmel\\Atmel Studio 6.2\\..\\Atmel Toolchain\\ARM GCC\\Native\\'
-                          '4.8.1437\\arm-gnu-toolchain\\bin', tc.path)
-        self.assertEquals('arm', tc.tool_type)
-
-    def test_read_reg(self):
-        pass
+from asninja.as_project import *
 
 
 class TestAtmelStudioProject(unittest.TestCase):
     def setUp(self):
-        self.asp = asninja.AtmelStudioProject('Korsar3.cproj', 'Korsar3')
+        self.asp = AtmelStudioProject('Korsar3.cproj', 'Korsar3')
 
     def tearDown(self):
         self.asp = None
@@ -145,7 +89,7 @@ class TestAtmelStudioProject(unittest.TestCase):
     def test_compiler_flags(self):
         self.assertTrue(self.asp.select_config('Debug'))
 
-        flags = self.asp.compiler_flags('armgcc', add_defs=['TestDef'])
+        flags = self.asp.compiler_flags('armgcc', add_defs=['TestDef'], del_defs=[], add_undefs=[])
         self.assertIsNotNone(flags)
         self.assertIsInstance(flags, list)
         self.assertLess(0, len(flags))
@@ -155,7 +99,7 @@ class TestAtmelStudioProject(unittest.TestCase):
     def test_compiler_flags_with_empty_def(self):
         self.assertTrue(self.asp.select_config('Debug'))
 
-        flags = self.asp.compiler_flags('armgcc', add_defs=[''])
+        flags = self.asp.compiler_flags('armgcc', add_defs=[''], del_defs=[], add_undefs=[])
         self.assertFalse('-D' in flags)
 
     def test_linker_flags(self):
@@ -178,39 +122,21 @@ class TestAtmelStudioProject(unittest.TestCase):
 
 class TestRefLibrary(unittest.TestCase):
     def test_lib_name(self):
-        reflib = asninja.RefLibrary('', 'Center')
+        reflib = RefLibrary('', 'Center')
 
         self.assertEquals('libCenter', reflib.lib_name(False))
         self.assertEquals('libCenter.a', reflib.lib_name(True))
 
     def test_full_name(self):
-        reflib = asninja.RefLibrary('Path', 'Center')
+        reflib = RefLibrary('Path', 'Center')
 
         self.assertEquals('Path/Debug/libCenter.a', reflib.full_name('Debug'))
 
     def test_extract_name(self):
-        self.assertEquals('Center', asninja.RefLibrary.extract_name('Center'))
-        self.assertEquals('Center', asninja.RefLibrary.extract_name('libCenter'))
-        self.assertEquals('Center', asninja.RefLibrary.extract_name('Center.a'))
-        self.assertEquals('Center', asninja.RefLibrary.extract_name('libCenter.a'))
-
-
-class TestFunctions(unittest.TestCase):
-    def test_strip_updir(self):
-        self.assertEquals('Path', asninja.strip_updir('Path'))
-        self.assertEquals('Path', asninja.strip_updir('../Path'))
-        self.assertEquals('Path', asninja.strip_updir('../../Path'))
-        self.assertEquals('ath', asninja.strip_updir('..Path'))
-
-    def test_detect_linker_script(self):
-        self.assertEquals('linker_script', asninja.detect_linker_script(['bla -T../linker_script']))
-        self.assertEquals('linker_script', asninja.detect_linker_script(['bla -T../linker_script bla']))
-        self.assertIsNone(asninja.detect_linker_script(['linker_script']))
-
-
-class TestConvert(unittest.TestCase):
-    def test_(self):
-        pass
+        self.assertEquals('Center', RefLibrary.extract_name('Center'))
+        self.assertEquals('Center', RefLibrary.extract_name('libCenter'))
+        self.assertEquals('Center', RefLibrary.extract_name('Center.a'))
+        self.assertEquals('Center', RefLibrary.extract_name('libCenter.a'))
 
 
 if __name__ == '__main__':
