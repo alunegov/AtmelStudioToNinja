@@ -1,6 +1,3 @@
-__all__ = ["strip_empty_symbols", "strip_updir"]
-
-
 def strip_empty_symbols(symbols):
     assert isinstance(symbols, list)
     new_symbols = []

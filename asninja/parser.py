@@ -4,8 +4,6 @@ from xml.etree import ElementTree
 
 import asninja.helpers
 
-__all__ = ["AtmelStudioProject", "RefLibrary"]
-
 
 class AtmelStudioProject(object):
     NSMAP = {'msb': 'http://schemas.microsoft.com/developer/msbuild/2003'}

@@ -1,1 +1,1 @@
-ninja_syntax==1.6.0
+ninja_syntax>=1.6.0

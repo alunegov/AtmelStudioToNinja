@@ -1,7 +1,5 @@
 import os
 
-__all__ = ["GccToolchain"]
-
 
 class GccToolchain(object):
     def __init__(self, path, tool_type=None):

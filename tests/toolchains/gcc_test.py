@@ -1,6 +1,6 @@
 import unittest
 
-from asninja.gcc_toolchain import *
+from asninja.toolchains.gcc import *
 
 
 class TestGccToolchain(unittest.TestCase):

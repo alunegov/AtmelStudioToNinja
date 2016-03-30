@@ -1,7 +1,7 @@
 import unittest
 
-from asninja import as_project
-from asninja.as_toolchain import *
+from asninja.parser import AtmelStudioProject
+from asninja.toolchains.atmel_studio import *
 
 
 class TestAtmelStudioGccToolchain(unittest.TestCase):
@@ -11,7 +11,7 @@ class TestAtmelStudioGccToolchain(unittest.TestCase):
         self.assertEquals('arm', tc.tool_type)
 
     def test_from_project(self):
-        asp = as_project.AtmelStudioProject('Korsar3.cproj', 'Korsar3')
+        asp = AtmelStudioProject('Korsar3.cproj', 'Korsar3')
 
         tc = AtmelStudioGccToolchain.from_project(asp)
         self.assertEquals('C:\\Program Files (x86)\\Atmel\\Atmel Studio 6.2\\..\\Atmel Toolchain\\ARM GCC\\Native\\'

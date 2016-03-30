@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from asninja.as_project import *
+from asninja.parser import *
 
 
 class TestAtmelStudioProject(unittest.TestCase):

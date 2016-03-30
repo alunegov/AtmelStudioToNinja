@@ -1,9 +1,7 @@
 import os
 import winreg
 
-from asninja.gcc_toolchain import GccToolchain
-
-__all__ = ["AtmelStudioGccToolchain"]
+from ..toolchains.gcc import GccToolchain
 
 
 class AtmelStudioGccToolchain(GccToolchain):
