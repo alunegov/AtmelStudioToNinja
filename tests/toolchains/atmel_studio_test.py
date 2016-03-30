@@ -1,3 +1,4 @@
+import sys
 import unittest
 
 from asninja.parser import AtmelStudioProject
@@ -10,6 +11,7 @@ class TestAtmelStudioGccToolchain(unittest.TestCase):
         self.assertEqual('arm-', tc.path)
         self.assertEqual('arm', tc.tool_type)
 
+    @unittest.expectedFailure
     def test_from_project(self):
         asp = AtmelStudioProject('Korsar3.cproj', 'Korsar3')
 
@@ -18,6 +20,7 @@ class TestAtmelStudioGccToolchain(unittest.TestCase):
                          '4.8.1437\\arm-gnu-toolchain\\bin', tc.path)
         self.assertEqual('arm', tc.tool_type)
 
+    @unittest.skipUnless(sys.platform.startswith("win"), "requires Windows")
     def test_read_reg(self):
         pass
 

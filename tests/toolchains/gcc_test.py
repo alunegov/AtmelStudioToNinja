@@ -13,13 +13,13 @@ class TestGccToolchain(unittest.TestCase):
         self.assertEqual('TestPath', tc.path)
         self.assertEqual('TestToolType', tc.tool_type)
 
-        # self.assertRaises(Exception, GccToolchain('PathWithoutToolchainMarker'))
+        self.assertRaises(Exception, lambda: GccToolchain('PathWithoutToolchainMarker'))
 
     def test_tool_type(self):
         self.assertEqual('arm', GccToolchain.tool_type('arm-'))
         self.assertEqual('avr32', GccToolchain.tool_type('avr32-'))
         self.assertEqual('avr8', GccToolchain.tool_type('avr8-'))
-        # self.assertRaises(Exception, GccToolchain.tool_type('PathWithoutToolchainMarker'))
+        self.assertRaises(Exception, lambda: GccToolchain.tool_type('PathWithoutToolchainMarker'))
 
     def test_tool_prefix(self):
         tc = GccToolchain('', 'arm')
