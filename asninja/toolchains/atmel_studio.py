@@ -1,5 +1,4 @@
 import os
-import winreg
 
 from ..toolchains.gcc import GccToolchain
 
@@ -62,6 +61,7 @@ class AtmelStudioGccToolchain(GccToolchain):
 
     @classmethod
     def read_reg(cls, key_name, value_name):
+        import winreg
         try:
             with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_name) as key:
                 value, __ = winreg.QueryValueEx(key, value_name)
