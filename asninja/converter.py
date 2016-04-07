@@ -60,6 +60,8 @@ class Converter(object):
             else:
                 # ARM/GNU Linker
                 lflags += asp.linker_flags(outdir)
+        else:
+            raise Exception('Undefined config in project {0}'.format(config))
 
         os.makedirs(outpath, exist_ok=True)
         nw = ninja_syntax.Writer(open(os.path.join(outpath, 'build.ninja'), 'w'), 120)
