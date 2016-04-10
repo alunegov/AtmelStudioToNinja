@@ -12,12 +12,13 @@ class TestAtmelStudioGccToolchain(unittest.TestCase):
         self.assertEqual('arm-', tc.path)
         self.assertEqual('arm', tc.tool_type)
 
-    @patch.object(AtmelStudioGccToolchain, 'read_reg', return_value = 'DUMMY_PATH\\')
+    @patch.object(AtmelStudioGccToolchain, 'read_reg', return_value='DUMMY_PATH')
     def test_from_project(self, mock_method):
         asp = AtmelStudioProject('Korsar3.cproj', 'Korsar3')
 
         tc = AtmelStudioGccToolchain.from_project(asp)
-        self.assertEqual('DUMMY_PATH\\..\\Atmel Toolchain\\ARM GCC\\Native\\4.8.1437\\arm-gnu-toolchain\\bin', tc.path)
+        self.assertEqual('DUMMY_PATH' + os.sep +
+                         '..\\Atmel Toolchain\\ARM GCC\\Native\\4.8.1437\\arm-gnu-toolchain\\bin', tc.path)
         self.assertEqual('arm', tc.tool_type)
 
     @unittest.skipUnless(sys.platform.startswith("win"), "requires Windows")
