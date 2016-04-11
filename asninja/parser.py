@@ -91,13 +91,14 @@ class AtmelStudioProject(object):
             src_files.append(node.attrib['Include'].replace('\\', '/'))
         return src_files
 
-    def compiler_flags(self, compiler, add_defs, del_defs, add_undefs):
+    def compiler_flags(self, c_compiler, add_defs, del_defs, add_undefs):
         assert self.config_group is not None
         assert isinstance(add_defs, list)
         assert isinstance(del_defs, list)
         assert isinstance(add_undefs, list)
         flags = []
-        prefix = compiler + '.compiler.'
+        prefix = 'armgcc' if c_compiler else 'armgcccpp'
+        prefix += '.compiler.'
         # General
         if self.key_as_bool(prefix + 'general.ChangeDefaultCharTypeUnsigned'):
             flags.append('-funsigned-char')

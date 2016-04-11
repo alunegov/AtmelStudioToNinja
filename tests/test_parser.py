@@ -1,4 +1,3 @@
-import os
 import unittest
 
 from asninja.parser import *
@@ -89,7 +88,7 @@ class TestAtmelStudioProject(unittest.TestCase):
     def test_compiler_flags(self):
         self.assertTrue(self.asp.select_config('Debug'))
 
-        flags = self.asp.compiler_flags('armgcc', add_defs=['TestDef'], del_defs=[], add_undefs=[])
+        flags = self.asp.compiler_flags(True, add_defs=['TestDef'], del_defs=[], add_undefs=[])
         self.assertIsNotNone(flags)
         self.assertIsInstance(flags, list)
         self.assertLess(0, len(flags))
@@ -99,7 +98,7 @@ class TestAtmelStudioProject(unittest.TestCase):
     def test_compiler_flags_with_empty_def(self):
         self.assertTrue(self.asp.select_config('Debug'))
 
-        flags = self.asp.compiler_flags('armgcc', add_defs=[''], del_defs=[], add_undefs=[])
+        flags = self.asp.compiler_flags(True, add_defs=[''], del_defs=[], add_undefs=[])
         self.assertFalse('-D' in flags)
 
     def test_linker_flags(self):

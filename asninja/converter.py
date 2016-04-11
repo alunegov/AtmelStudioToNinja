@@ -50,10 +50,10 @@ class Converter(object):
 
         if asp.select_config(config):
             # ARM/GNU C Compiler
-            ccflags += asp.compiler_flags('armgcc', add_defs, del_defs, [])
+            ccflags += asp.compiler_flags(True, add_defs, del_defs, [])
             # ARM/GNU C++ Compiler
             if asp.is_cpp:
-                cxxflags += asp.compiler_flags('armgcccpp', add_defs, del_defs, [])
+                cxxflags += asp.compiler_flags(False, add_defs, del_defs, [])
             if asp.is_lib:
                 # ARM/GNU Archiver
                 arflags += asp.archiver_flags()
