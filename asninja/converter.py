@@ -104,7 +104,7 @@ class Converter(object):
             nw.newline()
 
             nw.rule('ar',
-                    command=ar + ' $arflags -c -o $out $in',
+                    command=ar + ' $arflags -o $out $in',
                     description='ar $out')
         else:
             nw.variable('lflags', lflags)
