@@ -143,8 +143,6 @@ class AtmelStudioProject(object):
             flags.append('-ffast-math')
         if self.key_as_bool(prefix + 'optimization.GeneratePositionIndependentCode'):
             flags.append('-fpic')
-        if self.key_as_bool(prefix + 'optimization.EnableFastMath'):
-            flags.append('-ffast-math')
         if self.key_as_bool(prefix + 'optimization.EnableLongCalls', True):
             flags.append('-mlong-calls')
         # Debugging
