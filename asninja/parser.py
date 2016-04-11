@@ -169,7 +169,7 @@ class AtmelStudioProject(object):
         if self.key_as_bool(prefix + 'warnings.CheckSyntaxOnly'):
             flags.append('-fsyntax-only')
         if self.key_as_bool(prefix + 'warnings.Pedantic'):
-            flags.append('-pedentic')
+            flags.append('-pedantic')
         if self.key_as_bool(prefix + 'warnings.PedanticWarningsAsErrors'):
             flags.append('-pedantic-errors')
         if self.key_as_bool(prefix + 'warnings.InhibitAllWarnings'):
