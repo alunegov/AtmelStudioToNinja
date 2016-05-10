@@ -6,7 +6,7 @@ PROJECT_NAME = 'asninja'
 
 setup(
     name=PROJECT_NAME,
-    version="1.1",
+    version="1.2",
     packages=[
         PROJECT_NAME,
         PROJECT_NAME + '.toolchains'
