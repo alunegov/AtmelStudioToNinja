@@ -1,13 +1,19 @@
+"""setup.py: setuptools control."""
+
 from setuptools import setup
 
+PROJECT_NAME = 'asninja'
 
 setup(
-    name="asninja",
+    name=PROJECT_NAME,
     version="1.1",
     packages=[
-        'asninja',
-        'asninja.toolchains'
+        PROJECT_NAME,
+        PROJECT_NAME + '.toolchains'
     ],
+    entry_points={
+        "console_scripts": ['{0} = {0}.{0}:main'.format(PROJECT_NAME)]
+    },
     install_requires=[
         'ninja_syntax>=1.6.0'
     ],
