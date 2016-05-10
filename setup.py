@@ -20,6 +20,6 @@ setup(
     author='Alexander Lunegov',
     author_email='alunegov@gmail.com',
     url='https://github.com/alunegov/AtmelStudioToNinja',
-    description='Convert Atmel Studio .cproj/.cppproj file to .ninja file',
+    description='Convert Atmel Studio project file to Ninja build file',
     license='MIT'
 )
