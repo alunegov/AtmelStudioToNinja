@@ -57,7 +57,7 @@ class AtmelStudioProject(object):
     def select_config(self, config_name):
         self.config_group = None
         for group in self.prj.findall('msb:PropertyGroup', self.NSMAP):
-            if group.attrib.get('Condition', '__') == " '$(Configuration)' == '{}' ".format(config_name):
+            if group.attrib.get('Condition', '__').strip() == "'$(Configuration)' == '{}'".format(config_name):
                 self.config_group = group
                 break
         return self.config_group is not None

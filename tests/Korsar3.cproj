@@ -503,7 +503,7 @@
     </ToolchainSettings>
     <PostBuildEvent>$(MSBuildProjectDirectory)\DoCppCheck.cmd "$(MSBuildProjectDirectory)" "$(OutputDirectory)" "$(USERNAME)" "$(Configuration)" "Korsar3Mini-trunk"</PostBuildEvent>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug'">
     <ToolchainSettings>
       <ArmGcc>
   <armgcc.common.outputfiles.hex>False</armgcc.common.outputfiles.hex>
