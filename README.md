@@ -1,2 +1,3 @@
 # AtmelStudioToNinja
-[![Build Status](https://travis-ci.org/alunegov/AtmelStudioToNinja.svg?branch=master)](https://travis-ci.org/alunegov/AtmelStudioToNinja)
+
+[![Build Status](https://github.com/alunegov/AtmelStudioToNinja/workflows/Test/badge.svg)](https://github.com/alunegov/AtmelStudioToNinja/actions)
